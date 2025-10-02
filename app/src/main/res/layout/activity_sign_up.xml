@@ -8,12 +8,15 @@
 
     <TextView
         android:id="@+id/tvSignUpTitle"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Create Your Account"
-        android:textSize="28sp"
+        android:textSize="36sp"
         android:textStyle="bold"
-        android:textColor="@android:color/holo_blue_dark"
+        android:gravity="center"
+        android:paddingTop="40dp"
+        android:textColor="@color/primaryLight"
+        android:fontFamily="@font/pacifico"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -24,11 +27,11 @@
         android:layout_height="wrap_content"
         android:hint="Email"
         android:inputType="textEmailAddress"
+        android:layout_marginTop="32dp"
+        android:importantForAutofill="yes"
         app:layout_constraintTop_toBottomOf="@id/tvSignUpTitle"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp"
-        android:importantForAutofill="yes" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <EditText
         android:id="@+id/etNewPassword"
@@ -36,11 +39,11 @@
         android:layout_height="wrap_content"
         android:hint="Password"
         android:inputType="textPassword"
+        android:layout_marginTop="16dp"
+        android:importantForAutofill="yes"
         app:layout_constraintTop_toBottomOf="@id/etNewEmail"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
-        android:importantForAutofill="yes" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
         android:id="@+id/tvFingerprintToggleLabel"
@@ -48,9 +51,11 @@
         android:layout_height="wrap_content"
         android:text="Enable Fingerprint Login"
         android:textSize="16sp"
+        android:textColor="@color/primaryLight"
+        android:layout_marginTop="24dp"
         app:layout_constraintTop_toBottomOf="@id/etNewPassword"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop="24dp" />
+        app:layout_constraintEnd_toStartOf="@id/switchFingerprint" />
 
     <Switch
         android:id="@+id/switchFingerprint"
@@ -64,9 +69,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Sign Up"
+        android:layout_marginTop="32dp"
         app:layout_constraintTop_toBottomOf="@id/tvFingerprintToggleLabel"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
