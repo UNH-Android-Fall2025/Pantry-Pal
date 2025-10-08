@@ -1,0 +1,3 @@
+<resources>
+    <color name="button_bg">#FFFFFF</color> <!-- or lighter gray for dark theme -->
+</resources>
