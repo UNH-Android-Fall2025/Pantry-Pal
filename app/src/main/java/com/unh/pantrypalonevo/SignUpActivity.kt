@@ -4,17 +4,24 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.pantrypalonevo.databinding.ActivitySignUpBinding
 
 class SignUpActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignUpBinding
     private var fingerprintEnabled = false
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySignUpBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
 
         binding.switchFingerprint.setOnCheckedChangeListener { _, isChecked ->
             fingerprintEnabled = isChecked
@@ -29,17 +36,39 @@ class SignUpActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Store fingerprint preference for use in login (demo with Toast)
-            val fingerprintMsg = if (fingerprintEnabled) "Fingerprint Login Enabled" else "Fingerprint Login Disabled"
-            Toast.makeText(this, "Sign Up Successful. $fingerprintMsg", Toast.LENGTH_SHORT).show()
+            auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val userId = auth.currentUser?.uid ?: ""
+                        val userMap = hashMapOf(
+                            "email" to email,
+                            "fingerprintEnabled" to fingerprintEnabled,
+                            "createdAt" to System.currentTimeMillis(),
+                            "first" to "",
+                            "last" to "",
+                            "role" to "recipient", // or let user choose
+                            "dietaryRestrictions" to arrayListOf<String>(),
+                            "nutritionGoals" to arrayListOf<String>(),
+                            "favorites" to arrayListOf<String>(),
+                            "notificationToken" to ""
+                        )
 
-            // TODO: Save new user signup data, including fingerprint preference.
+                        db.collection("users").document(userId).set(userMap)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Sign Up Successful", Toast.LENGTH_SHORT).show()
 
-            // Navigate back to login screen after sign up
-            val loginIntent = Intent(this, LoginActivity::class.java)
-            loginIntent.putExtra("fingerprint_enabled", fingerprintEnabled)
-            startActivity(loginIntent)
-            finish()
+                                val loginIntent = Intent(this, LoginActivity::class.java)
+                                loginIntent.putExtra("fingerprint_enabled", fingerprintEnabled)
+                                startActivity(loginIntent)
+                                finish()
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Firestore error: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    } else {
+                        Toast.makeText(this, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
         }
     }
 }
