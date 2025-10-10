@@ -9,4 +9,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="button_bg">#404348</color> <!-- default for light mode -->
     <color name="button_text">#FFFFFF</color> <!-- White text for dark button -->
+    <color name="primaryLight">#0EA5E9</color>
 </resources>
