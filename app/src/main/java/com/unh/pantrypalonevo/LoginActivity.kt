@@ -2,13 +2,20 @@ package com.unh.pantrypalonevo
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
 import com.unh.pantrypalonevo.databinding.ActivityLoginBinding
 import java.util.concurrent.Executor
+import androidx.compose.ui.Modifier
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
 
@@ -20,12 +27,41 @@ class LoginActivity : AppCompatActivity() {
     private var fingerprintEnabled: Boolean = false
     private var fingerprintFailCount = 0
 
+    private val RC_SIGN_IN = 9001
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Get fingerprintEnabled from Intent extras passed by SignUp (or saved prefs)
+        val googleButton = findViewById<com.google.android.gms.common.SignInButton>(R.id.btnGoogleSignIn)
+
+        // Detect light/dark theme
+        val nightModeFlags = resources.configuration.uiMode and
+                android.content.res.Configuration.UI_MODE_NIGHT_MASK
+
+        when (nightModeFlags) {
+            android.content.res.Configuration.UI_MODE_NIGHT_YES -> {
+                googleButton.setColorScheme(com.google.android.gms.common.SignInButton.COLOR_LIGHT) // white button in dark mode
+            }
+            else -> {
+                googleButton.setColorScheme(com.google.android.gms.common.SignInButton.COLOR_DARK) // dark button in light mode
+            }
+        }
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build()
+        val googleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        googleButton.setOnClickListener {
+            val signInIntent = googleSignInClient.signInIntent
+            startActivityForResult(signInIntent, RC_SIGN_IN)
+        }
+
+
+
+
         fingerprintEnabled = intent.getBooleanExtra("fingerprint_enabled", false)
 
         executor = ContextCompat.getMainExecutor(this)
@@ -36,6 +72,11 @@ class LoginActivity : AppCompatActivity() {
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 Toast.makeText(applicationContext, "Fingerprint Authentication succeeded", Toast.LENGTH_SHORT).show()
+
+                // Save preference to SharedPreferences for offline access
+                val prefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
+                prefs.edit().putBoolean("fingerprint_enabled", true).apply()
+
                 navigateToHome()
             }
 
@@ -63,7 +104,8 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.btnLogin.setOnClickListener {
-            if (fingerprintEnabled && fingerprintFailCount < 2 && BiometricManager.from(this).canAuthenticate() == BiometricManager.BIOMETRIC_SUCCESS) {
+            if (fingerprintEnabled && fingerprintFailCount < 2 &&
+                BiometricManager.from(this).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS) {
                 biometricPrompt.authenticate(promptInfo)
             } else {
                 val email = binding.etEmail.text.toString().trim()
@@ -74,15 +116,22 @@ class LoginActivity : AppCompatActivity() {
                     return@setOnClickListener
                 }
 
-                // TODO: Validate credentials with backend or Firebase
-                Toast.makeText(this, "Login successful (Password)", Toast.LENGTH_SHORT).show()
-                navigateToHome()
+                // Authenticate with Firebase
+                FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
+                            navigateToHome()
+                        } else {
+                            Toast.makeText(this, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
             }
         }
     }
 
     private fun navigateToHome() {
-        startActivity(Intent(this, HomePageActivity::class.java))
+        startActivity(Intent(this, MainActivity::class.java))
         finish()
     }
 }

@@ -4,8 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.unh.pantrypalonevo.databinding.ItemPantryBinding
-
-data class Pantry(val name: String, val description: String, val location: String)
+import com.unh.pantrypalonevo.Pantry
 
 class PantryAdapter(private val pantryList: List<Pantry>) :
     RecyclerView.Adapter<PantryAdapter.PantryViewHolder>() {
