@@ -16,6 +16,7 @@ import com.unh.pantrypalonevo.ui.theme.PantryPaloneVoTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+<<<<<<< HEAD
         enableEdgeToEdge()
         setContent {
             PantryPaloneVoTheme {
@@ -24,6 +25,49 @@ class MainActivity : ComponentActivity() {
                         name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
+=======
+
+        val auth = FirebaseAuth.getInstance()
+        val currentUser = auth.currentUser
+
+        if (currentUser == null) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        } else {
+            // ADDED: Save user email for dynamic greeting
+            val userEmail = currentUser.email ?: "user@example.com"
+            val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+            sharedPref.edit().putString("user_email", userEmail).apply()
+
+            // Fetch fingerprint preference from Firestore
+            val db = FirebaseFirestore.getInstance()
+            db.collection("users").document(currentUser.uid).get()
+                .addOnSuccessListener { document ->
+                    val fingerprintEnabled = document.getBoolean("fingerprintEnabled") ?: false
+
+                    // Save to SharedPreferences for offline access
+                    val prefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
+                    prefs.edit().putBoolean("fingerprint_enabled", fingerprintEnabled).apply()
+
+                    if (fingerprintEnabled) {
+                        startActivity(Intent(this, FingerprintActivity::class.java))
+                    } else {
+                        startActivity(Intent(this, HomePageActivity::class.java))
+                    }
+                    finish()
+                }
+                .addOnFailureListener {
+                    // Fallback to SharedPreferences if Firestore fails
+                    val prefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
+                    val fingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
+
+                    if (fingerprintEnabled) {
+                        startActivity(Intent(this, FingerprintActivity::class.java))
+                    } else {
+                        startActivity(Intent(this, HomePageActivity::class.java))
+                    }
+                    finish()
+>>>>>>> origin/dev
                 }
             }
         }
