@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.gms.google-services")
 }
 
 android {
@@ -66,17 +65,9 @@ dependencies {
     implementation("androidx.biometric:biometric:1.2.0-alpha04")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("com.google.android.material:material:1.10.0")
-    implementation(platform("com.google.firebase:firebase-bom:34.3.0"))
+    //implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    //implementation 'com.google.firebase:firebase-firestore'
+    //implementation 'com.google.firebase:firebase-auth'
 
-    // Firebase Authentication
-    implementation("com.google.firebase:firebase-auth")
 
-    // Cloud Firestore
-    implementation("com.google.firebase:firebase-firestore")
-
-    // Biometric authentication
-    implementation("androidx.biometric:biometric:1.2.0-alpha05")
-    implementation("com.google.android.gms:play-services-auth")
-    implementation("com.google.android.gms:play-services-location:21.0.1")
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
 }

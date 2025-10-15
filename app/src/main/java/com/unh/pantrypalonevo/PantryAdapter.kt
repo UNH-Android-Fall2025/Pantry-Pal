@@ -4,12 +4,11 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.unh.pantrypalonevo.databinding.ItemPantryBinding
-import com.unh.pantrypalonevo.Pantry
 
-class PantryAdapter(
-    private val pantryList: List<Pantry>,
-    private val onItemClick: (Pantry, String) -> Unit
-) : RecyclerView.Adapter<PantryAdapter.PantryViewHolder>() {
+data class Pantry(val name: String, val description: String, val location: String)
+
+class PantryAdapter(private val pantryList: List<Pantry>) :
+    RecyclerView.Adapter<PantryAdapter.PantryViewHolder>() {
 
     inner class PantryViewHolder(val binding: ItemPantryBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -20,19 +19,10 @@ class PantryAdapter(
 
     override fun onBindViewHolder(holder: PantryViewHolder, position: Int) {
         val pantry = pantryList[position]
-        holder.binding.apply {
-            tvPantryName.text = pantry.name
-            tvPantryDescription.text = pantry.description
-            tvPantryLocation.text = pantry.location
-            tvDistance.text = "${"%.1f".format(Math.random() * 2 + 0.1)} mi"
-
-            btnMapIcon.setOnClickListener { onItemClick(pantry, "map") }
-            root.setOnClickListener { onItemClick(pantry, "view") }
-        }
+        holder.binding.tvPantryName.text = pantry.name
+        holder.binding.tvPantryDescription.text = pantry.description
+        holder.binding.tvPantryLocation.text = pantry.location
     }
 
     override fun getItemCount(): Int = pantryList.size
 }
-
-// Extension function for formatting
-

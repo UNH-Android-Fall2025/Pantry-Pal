@@ -5,9 +5,6 @@
     <!-- Add biometric permission -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -20,20 +17,15 @@
         android:theme="@style/Theme.PantryPaloneVo"
         tools:targetApi="31">
 
-        <!-- MainActivity is the launcher - checks auth status first -->
+        <!-- Set LoginActivity as the launcher activity -->
         <activity
-            android:name=".MainActivity"
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- LoginActivity - no longer the launcher -->
-        <activity
-            android:name=".LoginActivity"
-            android:exported="false" />
 
         <!-- Add other activities -->
         <activity
@@ -48,14 +40,13 @@
             android:name=".HomePageActivity"
             android:exported="false" />
 
+        <!-- Remove or comment out the default MainActivity if it exists -->
+        <!--
         <activity
-            android:name=".FingerprintActivity"
-            android:exported="false"
-            android:theme="@style/Theme.PantryPaloneVo" />
-        <activity
-            android:name=".ProfileActivity"
-            android:exported="false" />
-
+            android:name=".MainActivity"
+            android:exported="true">
+        </activity>
+        -->
 
     </application>
 

@@ -2,73 +2,82 @@ package com.unh.pantrypalonevo
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.pantrypalonevo.databinding.ActivitySignUpBinding
 
 class SignUpActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignUpBinding
     private var fingerprintEnabled = false
-    private lateinit var auth: FirebaseAuth
-    private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySignUpBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
-
+        // 🔐 Fingerprint toggle listener
         binding.switchFingerprint.setOnCheckedChangeListener { _, isChecked ->
             fingerprintEnabled = isChecked
         }
 
+        // 📩 Sign Up button logic
         binding.btnSignUp.setOnClickListener {
             val email = binding.etNewEmail.text.toString().trim()
             val password = binding.etNewPassword.text.toString().trim()
 
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show()
+            // ✅ Validate inputs
+            if (!isValidEmail(email)) {
+                showToast("Please enter a valid email address")
                 return@setOnClickListener
             }
 
-            auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val userId = auth.currentUser?.uid ?: ""
-                        val userMap = hashMapOf(
-                            "email" to email,
-                            "fingerprintEnabled" to fingerprintEnabled,
-                            "createdAt" to System.currentTimeMillis(),
-                            "first" to "",
-                            "last" to "",
-                            "role" to "recipient", // or let user choose
-                            "dietaryRestrictions" to arrayListOf<String>(),
-                            "nutritionGoals" to arrayListOf<String>(),
-                            "favorites" to arrayListOf<String>(),
-                            "notificationToken" to ""
-                        )
+            if (!isValidPassword(password)) {
+                showToast("Password must be at least 6 characters")
+                return@setOnClickListener
+            }
 
-                        db.collection("users").document(userId).set(userMap)
-                            .addOnSuccessListener {
-                                Toast.makeText(this, "Sign Up Successful", Toast.LENGTH_SHORT).show()
+            // 🔄 Here you would normally save the new user info to Firebase or Room DB
+            // TODO: Implement actual signup logic (e.g., Firebase Auth or API call)
+            saveUserData(email, password, fingerprintEnabled)
 
-                                val loginIntent = Intent(this, LoginActivity::class.java)
-                                loginIntent.putExtra("fingerprint_enabled", fingerprintEnabled)
-                                startActivity(loginIntent)
-                                finish()
-                            }
-                            .addOnFailureListener { e ->
-                                Toast.makeText(this, "Firestore error: ${e.message}", Toast.LENGTH_SHORT).show()
-                            }
-                    } else {
-                        Toast.makeText(this, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                    }
-                }
+            val fingerprintMsg = if (fingerprintEnabled) {
+                "Fingerprint Login Enabled"
+            } else {
+                "Fingerprint Login Disabled"
+            }
+
+            showToast("Sign Up Successful. $fingerprintMsg")
+
+            // 🔁 Go back to Login screen with fingerprint status
+            val loginIntent = Intent(this, LoginActivity::class.java).apply {
+                putExtra("fingerprint_enabled", fingerprintEnabled)
+                putExtra("new_user_email", email)
+            }
+            startActivity(loginIntent)
+            finish()
         }
+    }
+
+    // 📧 Email validation
+    private fun isValidEmail(email: String): Boolean {
+        return email.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    // 🔑 Password validation (basic example)
+    private fun isValidPassword(password: String): Boolean {
+        return password.length >= 6
+    }
+
+    // 💾 Save user data (placeholder function)
+    private fun saveUserData(email: String, password: String, fingerprint: Boolean) {
+        // TODO: Replace with real database or Firebase logic
+        // This is just a placeholder for now.
+    }
+
+    // 🪄 Helper: Show toast messages
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }
