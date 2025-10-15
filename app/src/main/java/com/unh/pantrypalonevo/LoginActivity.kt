@@ -59,9 +59,6 @@ class LoginActivity : AppCompatActivity() {
             startActivityForResult(signInIntent, RC_SIGN_IN)
         }
 
-
-
-
         fingerprintEnabled = intent.getBooleanExtra("fingerprint_enabled", false)
 
         executor = ContextCompat.getMainExecutor(this)
@@ -77,7 +74,13 @@ class LoginActivity : AppCompatActivity() {
                 val prefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
                 prefs.edit().putBoolean("fingerprint_enabled", true).apply()
 
-                navigateToHome()
+                // UPDATED: Get current user's email for fingerprint login
+                val currentUser = FirebaseAuth.getInstance().currentUser
+                if (currentUser != null) {
+                    saveUserEmailAndNavigate(currentUser.email ?: "user@example.com")
+                } else {
+                    navigateToHome()
+                }
             }
 
             override fun onAuthenticationFailed() {
@@ -121,17 +124,56 @@ class LoginActivity : AppCompatActivity() {
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
-                            navigateToHome()
+
+                            // ADD THESE 3 LINES:
+                            val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+                            sharedPref.edit().putString("user_email", email).apply()
+
+                            navigateToHome() // This line stays the same
                         } else {
                             Toast.makeText(this, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
+
             }
         }
     }
 
+    // UPDATED: Handle Google Sign-In result
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == RC_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val email = account?.email ?: "user@example.com"
+
+                Toast.makeText(this, "Google Sign-In successful", Toast.LENGTH_SHORT).show()
+                saveUserEmailAndNavigate(email)
+
+            } catch (e: ApiException) {
+                Toast.makeText(this, "Google Sign-In failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // NEW: Save user email and navigate to HomePageActivity
+    private fun saveUserEmailAndNavigate(email: String) {
+        // Save email for dynamic greeting
+        val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putString("user_email", email)
+            apply()
+        }
+
+        // Navigate to HomePageActivity (not MainActivity)
+        navigateToHome()
+    }
+
     private fun navigateToHome() {
-        startActivity(Intent(this, MainActivity::class.java))
+        // UPDATED: Navigate to HomePageActivity instead of MainActivity
+        startActivity(Intent(this, HomePageActivity::class.java))
         finish()
     }
 }

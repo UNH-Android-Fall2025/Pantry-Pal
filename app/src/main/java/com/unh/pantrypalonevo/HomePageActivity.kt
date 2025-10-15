@@ -1,6 +1,7 @@
 package com.unh.pantrypalonevo
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -30,8 +31,85 @@ class HomePageActivity : AppCompatActivity() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+        // DYNAMIC: Setup user greeting first
+        setupDynamicGreeting()
+
         setupRecyclerView()
         setupClickListeners()
+    }
+
+    // DYNAMIC: Setup greeting based on stored user email
+    private fun setupDynamicGreeting() {
+        val sharedPref = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+        val userEmail = sharedPref.getString("user_email", null)
+
+        if (userEmail != null) {
+            // Extract username from email dynamically
+            val username = extractUsernameFromEmail(userEmail)
+            binding.tvGreeting.text = "Hello $username !!"
+        } else {
+            // First time - set a test email (remove this when you add login)
+            setTestUserEmail()
+            val testEmail = sharedPref.getString("user_email", "user@example.com")!!
+            val username = extractUsernameFromEmail(testEmail)
+            binding.tvGreeting.text = "Hello $username !!"
+        }
+    }
+
+    // TEMPORARY: Set test email (remove when you add login screen)
+    private fun setTestUserEmail() {
+        val sharedPref = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            // Change this email to test different usernames
+            putString("user_email", "rajul@gmail.com") // Try: john.doe@yahoo.com, mary_smith@hotmail.com
+            apply()
+        }
+    }
+
+    // DYNAMIC: Extract username from any email format
+    private fun extractUsernameFromEmail(email: String): String {
+        return if (email.contains("@")) {
+            val username = email.substringBefore("@")
+
+            // Handle different formats dynamically
+            when {
+                username.contains(".") -> {
+                    // john.doe@gmail.com → "John Doe"
+                    username.split(".").joinToString(" ") { word ->
+                        word.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase() else it.toString()
+                        }
+                    }
+                }
+                username.contains("_") -> {
+                    // john_doe@gmail.com → "John Doe"
+                    username.split("_").joinToString(" ") { word ->
+                        word.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase() else it.toString()
+                        }
+                    }
+                }
+                else -> {
+                    // rajul@gmail.com → "Rajul"
+                    username.replaceFirstChar {
+                        if (it.isLowerCase()) it.titlecase() else it.toString()
+                    }
+                }
+            }
+        } else {
+            "User"
+        }
+    }
+
+    // PUBLIC: Method to update user email (call this from login screen later)
+    fun updateUserEmail(email: String) {
+        val sharedPref = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putString("user_email", email)
+            apply()
+        }
+        // Refresh greeting
+        setupDynamicGreeting()
     }
 
     private fun setupRecyclerView() {
@@ -84,15 +162,12 @@ class HomePageActivity : AppCompatActivity() {
             Toast.makeText(this, "Cart page coming soon! 🛒", Toast.LENGTH_SHORT).show()
         }
 
-        // UPDATED: Profile navigation (navigate to ProfileActivity)
+        // Profile navigation (navigate to ProfileActivity)
         binding.btnProfile.setOnClickListener {
             val intent = Intent(this, ProfileActivity::class.java)
             startActivity(intent)
         }
     }
-
-    // REMOVED: showProfileOptions() method
-    // REMOVED: showLogoutDialog() method
 
     private fun requestLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {

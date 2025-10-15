@@ -1,5 +1,6 @@
 package com.unh.pantrypalonevo
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -17,13 +18,62 @@ class ProfileActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupClickListeners()
-        loadUserProfile()
+        // UPDATED: Load dynamic user profile instead of static
+        loadDynamicUserProfile()
     }
 
-    private fun loadUserProfile() {
-        // TODO: Load from database/preferences
-        binding.tvUserName.text = "Abhinav"
-        binding.tvPhoneNumber.text = "203565224"
+    // UPDATED: Load dynamic profile from saved email
+    private fun loadDynamicUserProfile() {
+        val sharedPref = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+        val userEmail = sharedPref.getString("user_email", null)
+
+        if (userEmail != null) {
+            // Extract username from email dynamically
+            val username = extractUsernameFromEmail(userEmail)
+            binding.tvUserName.text = username
+
+            // Show full email instead of phone number
+            binding.tvPhoneNumber.text = userEmail
+        } else {
+            // Fallback if no email stored
+            binding.tvUserName.text = "User"
+            binding.tvPhoneNumber.text = "No email available"
+        }
+    }
+
+    // SAME function as HomePageActivity for consistency
+    private fun extractUsernameFromEmail(email: String): String {
+        return if (email.contains("@")) {
+            val username = email.substringBefore("@")
+
+            // Handle different formats dynamically
+            when {
+                username.contains(".") -> {
+                    // john.doe@gmail.com → "John Doe"
+                    username.split(".").joinToString(" ") { word ->
+                        word.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase() else it.toString()
+                        }
+                    }
+                }
+                username.contains("_") -> {
+                    // john_doe@gmail.com → "John Doe"
+                    username.split("_").joinToString(" ") { word ->
+                        word.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase() else it.toString()
+                        }
+                    }
+                }
+                else -> {
+                    // rajul@gmail.com → "Rajul"
+                    username.replaceFirstChar {
+                        if (it.isLowerCase()) it.titlecase() else it.toString()
+                    }
+                }
+            }
+        } else {
+            "User"
+        }
     }
 
     private fun setupClickListeners() {
