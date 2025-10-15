@@ -5,6 +5,9 @@
     <!-- Add biometric permission -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -49,7 +52,9 @@
             android:name=".FingerprintActivity"
             android:exported="false"
             android:theme="@style/Theme.PantryPaloneVo" />
-
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
 
 
     </application>

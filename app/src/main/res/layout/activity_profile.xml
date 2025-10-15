@@ -6,25 +6,55 @@
     android:layout_height="match_parent"
     android:background="#F8F9FA">
 
-    <!-- Header Section with Location -->
+    <!-- Header Section -->
     <LinearLayout
         android:id="@+id/headerSection"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:background="@android:color/holo_blue_dark"
+        android:padding="20dp"
+        android:background="@android:color/white"
+        android:layout_margin="16dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Top Row: Greeting and Location Icon -->
+        <!-- Top row with settings -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="end">
 
+            <ImageButton
+                android:id="@+id/btnSettings"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_preferences"
+                android:background="@android:drawable/btn_default"
+                android:scaleType="centerInside" />
+
+        </LinearLayout>
+
+        <!-- Profile info -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="16dp">
+
+            <!-- Profile picture -->
+            <ImageView
+                android:id="@+id/ivProfilePicture"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_profile"
+                android:background="@android:drawable/btn_default"
+                android:scaleType="centerInside"
+                android:layout_marginEnd="16dp" />
+
+            <!-- Name and phone -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -32,111 +62,91 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/tvGreeting"
+                    android:id="@+id/tvUserName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Hello Rajul !!"
-                    android:textSize="22sp"
+                    android:text="Abhinav"
+                    android:textSize="24sp"
                     android:textStyle="bold"
-                    android:textColor="@android:color/white" />
+                    android:textColor="@android:color/black" />
 
                 <TextView
-                    android:id="@+id/tvSubtitle"
+                    android:id="@+id/tvPhoneNumber"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Free Pantry near you"
+                    android:text="203565224"
                     android:textSize="16sp"
-                    android:textColor="@android:color/white"
-                    android:alpha="0.9" />
+                    android:textColor="@android:color/darker_gray"
+                    android:layout_marginTop="4dp" />
 
             </LinearLayout>
-
-            <!-- Location button with location functionality -->
-            <ImageView
-                android:id="@+id/ivLocationButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/ic_location_pin"
-                android:background="@android:drawable/btn_default"
-                android:scaleType="centerInside"
-                android:clickable="true"
-                android:focusable="true" />
-
-        </LinearLayout>
-
-        <!-- Location Section -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="12dp"
-            android:background="#33FFFFFF"
-            android:padding="12dp"
-            android:id="@+id/llLocationSection">
-
-            <ImageView
-                android:id="@+id/ivLocationIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_location_pin"
-                android:layout_marginEnd="8dp" />
-
-            <TextView
-                android:id="@+id/tvCurrentLocation"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Tap location icon above to enable"
-                android:textColor="@android:color/white"
-                android:textSize="14sp" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Search Section -->
+    <!-- Action Buttons Section -->
     <LinearLayout
-        android:id="@+id/searchSection"
+        android:id="@+id/actionsSection"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
+        android:orientation="vertical"
+        android:layout_margin="16dp"
         android:background="@android:color/white"
-        android:elevation="2dp"
+        android:padding="16dp"
         app:layout_constraintTop_toBottomOf="@id/headerSection"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <EditText
-            android:id="@+id/etSearch"
-            android:layout_width="0dp"
+        <Button
+            android:id="@+id/btnPantryCode"
+            android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:layout_weight="1"
-            android:hint="Search pantries near you..."
-            android:background="@android:drawable/editbox_background"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp" />
+            android:text="Pantry Code"
+            android:layout_marginBottom="8dp"
+            android:background="@android:drawable/btn_default" />
 
         <Button
-            android:id="@+id/btnSearch"
-            android:layout_width="wrap_content"
+            android:id="@+id/btnPublishPantry"
+            android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:text="Search"
-            android:layout_marginStart="8dp" />
+            android:text="📸 Publish Pantry"
+            android:layout_marginBottom="8dp"
+            android:background="@android:drawable/btn_default" />
+
+        <Button
+            android:id="@+id/btnEditProfile"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Edit Profile"
+            android:layout_marginBottom="8dp"
+            android:background="@android:drawable/btn_default" />
+
+        <Button
+            android:id="@+id/btnShareProfile"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Share Profile"
+            android:layout_marginBottom="8dp"
+            android:background="@android:drawable/btn_default" />
+
+        <Button
+            android:id="@+id/btnRecipeSaved"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Recipe Saved"
+            android:background="@android:drawable/btn_default" />
+
+        <Button
+            android:id="@+id/btnLogout"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="🚪 LOGOUT"
+            android:layout_marginTop="8dp"
+            android:background="@android:drawable/btn_default"
+            android:textColor="#FF0000" />
 
     </LinearLayout>
-
-    <!-- Pantries List -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvPantryList"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        app:layout_constraintTop_toBottomOf="@id/searchSection"
-        app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Bottom Navigation -->
     <LinearLayout
@@ -177,7 +187,6 @@
             android:background="@android:color/transparent"
             android:drawableTop="@drawable/ic_cart" />
 
-        <!-- UPDATED: Profile with custom profile icon -->
         <Button
             android:id="@+id/btnProfile"
             android:layout_width="0dp"

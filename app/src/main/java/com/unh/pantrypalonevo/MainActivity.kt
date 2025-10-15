@@ -28,6 +28,11 @@ class MainActivity : ComponentActivity() {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         } else {
+            // ADDED: Save user email for dynamic greeting
+            val userEmail = currentUser.email ?: "user@example.com"
+            val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+            sharedPref.edit().putString("user_email", userEmail).apply()
+
             // Fetch fingerprint preference from Firestore
             val db = FirebaseFirestore.getInstance()
             db.collection("users").document(currentUser.uid).get()
