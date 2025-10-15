@@ -1,32 +1,34 @@
 package com.unh.pantrypalonevo
 
-<<<<<<< HEAD
-=======
 import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
->>>>>>> origin/dev
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.unh.pantrypalonevo.databinding.ActivityHomePageBinding
 
 class HomePageActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHomePageBinding
     private lateinit var pantryAdapter: PantryAdapter
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+    private val LOCATION_PERMISSION_REQUEST_CODE = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomePageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-<<<<<<< HEAD
-        // Sample test data for pantry list
-=======
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         // DYNAMIC: Setup user greeting first
@@ -72,7 +74,7 @@ class HomePageActivity : AppCompatActivity() {
             // Handle different formats dynamically
             when {
                 username.contains(".") -> {
-                    // john.doe@gmail.com → "John Doe"
+                    // john.doe@gmail.com â†’ "John Doe"
                     username.split(".").joinToString(" ") { word ->
                         word.replaceFirstChar {
                             if (it.isLowerCase()) it.titlecase() else it.toString()
@@ -80,7 +82,7 @@ class HomePageActivity : AppCompatActivity() {
                     }
                 }
                 username.contains("_") -> {
-                    // john_doe@gmail.com → "John Doe"
+                    // john_doe@gmail.com â†’ "John Doe"
                     username.split("_").joinToString(" ") { word ->
                         word.replaceFirstChar {
                             if (it.isLowerCase()) it.titlecase() else it.toString()
@@ -88,7 +90,7 @@ class HomePageActivity : AppCompatActivity() {
                     }
                 }
                 else -> {
-                    // rajul@gmail.com → "Rajul"
+                    // rajul@gmail.com â†’ "Rajul"
                     username.replaceFirstChar {
                         if (it.isLowerCase()) it.titlecase() else it.toString()
                     }
@@ -111,19 +113,28 @@ class HomePageActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
->>>>>>> origin/dev
         val pantryList = listOf(
-            Pantry("Pantry name", "Short Description", "West Haven, CT"),
-            Pantry("Pantry name", "Short Description", "West Haven, CT"),
-            Pantry("Pantry name", "Short Description", "West Haven, CT")
+            Pantry("West Haven Food Bank", "Fresh produce, canned goods, bread", "123 Main St, West Haven, CT", 41.2706, -72.9389),
+            Pantry("Community Pantry", "Family-friendly pantry with clothing", "456 Oak Ave, New Haven, CT", 41.3083, -72.9279),
+            Pantry("Faith Community Kitchen", "Hot meals served Mon-Fri", "789 Church St, Milford, CT", 41.2225, -73.0640),
+            Pantry("Neighborhood Support", "Emergency food assistance", "321 Elm St, West Haven, CT", 41.2650, -72.9470),
+            Pantry("Hope Center", "Comprehensive family services", "654 Park Ave, New Haven, CT", 41.3111, -72.9267)
         )
 
-        pantryAdapter = PantryAdapter(pantryList)
+        pantryAdapter = PantryAdapter(pantryList) { pantry, action ->
+            when (action) {
+                "view" -> {
+                    Toast.makeText(this, "Selected: ${pantry.name}", Toast.LENGTH_SHORT).show()
+                }
+                "map" -> {
+                    openPantryInMaps(pantry)
+                }
+            }
+        }
+
         binding.rvPantryList.layoutManager = LinearLayoutManager(this)
         binding.rvPantryList.adapter = pantryAdapter
     }
-<<<<<<< HEAD
-=======
 
     private fun setupClickListeners() {
         // Location functionality in top-right location button
@@ -144,11 +155,11 @@ class HomePageActivity : AppCompatActivity() {
         }
 
         binding.btnRecipes.setOnClickListener {
-            Toast.makeText(this, "Recipes page coming soon! 🍳", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Recipes page coming soon! ðŸ³", Toast.LENGTH_SHORT).show()
         }
 
         binding.btnCart.setOnClickListener {
-            Toast.makeText(this, "Cart page coming soon! 🛒", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Cart page coming soon! ðŸ›’", Toast.LENGTH_SHORT).show()
         }
 
         // Profile navigation (navigate to ProfileActivity)
@@ -227,5 +238,4 @@ class HomePageActivity : AppCompatActivity() {
             }
         }
     }
->>>>>>> origin/dev
 }

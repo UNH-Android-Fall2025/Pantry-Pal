@@ -29,23 +29,28 @@ class FingerprintActivity : AppCompatActivity() {
 
         biometricPrompt = BiometricPrompt(this, executor,
             object : BiometricPrompt.AuthenticationCallback() {
+
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
                     // User cancelled or error - go to login screen
-                    Toast.makeText(applicationContext, "Authentication required", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext,
+                        "Authentication required", Toast.LENGTH_SHORT).show()
                     goToLogin()
                 }
 
-                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                override fun onAuthenticationSucceeded(
+                    result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
                     // Fingerprint success - go to home
-                    Toast.makeText(applicationContext, "Welcome back!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext,
+                        "Welcome back!", Toast.LENGTH_SHORT).show()
                     goToHome()
                 }
 
                 override fun onAuthenticationFailed() {
                     super.onAuthenticationFailed()
-                    Toast.makeText(applicationContext, "Try again", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext,
+                        "Try again", Toast.LENGTH_SHORT).show()
                 }
             })
 
@@ -63,12 +68,12 @@ class FingerprintActivity : AppCompatActivity() {
                 biometricPrompt.authenticate(promptInfo)
             }
             else -> {
-                // Biometric not available - go to login
-                Toast.makeText(this, "Biometric not available, please login", Toast.LENGTH_SHORT).show()
+                // Biometric not available, navigate to login
                 goToLogin()
             }
         }
     }
+
 
     private fun goToHome() {
         startActivity(Intent(this, HomePageActivity::class.java))
