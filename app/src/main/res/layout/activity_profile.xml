@@ -137,6 +137,15 @@
             android:text="Recipe Saved"
             android:background="@android:drawable/btn_default" />
 
+        <Button
+            android:id="@+id/btnLogout"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="🚪 LOGOUT"
+            android:layout_marginTop="8dp"
+            android:background="@android:drawable/btn_default"
+            android:textColor="#FF0000" />
+
     </LinearLayout>
 
     <!-- Bottom Navigation -->

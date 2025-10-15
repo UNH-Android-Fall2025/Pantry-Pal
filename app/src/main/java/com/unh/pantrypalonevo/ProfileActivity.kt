@@ -7,6 +7,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AlertDialog
 import com.unh.pantrypalonevo.databinding.ActivityProfileBinding
+import com.google.firebase.auth.FirebaseAuth
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 
 class ProfileActivity : AppCompatActivity() {
 
@@ -77,9 +80,9 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // Settings button
+        // UPDATED: Settings button with logout option
         binding.btnSettings.setOnClickListener {
-            Toast.makeText(this, "Settings - Coming Soon!", Toast.LENGTH_SHORT).show()
+            showSettingsOptions()
         }
 
         // Profile action buttons
@@ -119,6 +122,77 @@ class ProfileActivity : AppCompatActivity() {
         binding.btnProfile.setOnClickListener {
             Toast.makeText(this, "Already on Profile", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    // NEW: Settings options with logout
+    private fun showSettingsOptions() {
+        val settingsOptions = arrayOf(
+            "Account Settings",
+            "Privacy Settings",
+            "Notifications",
+            "Help & Support",
+            "Logout"
+        )
+
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Settings")
+        builder.setItems(settingsOptions) { dialog, which ->
+            when (which) {
+                0 -> Toast.makeText(this, "Account Settings - Coming Soon!", Toast.LENGTH_SHORT).show()
+                1 -> Toast.makeText(this, "Privacy Settings - Coming Soon!", Toast.LENGTH_SHORT).show()
+                2 -> Toast.makeText(this, "Notifications - Coming Soon!", Toast.LENGTH_SHORT).show()
+                3 -> Toast.makeText(this, "Help & Support - Coming Soon!", Toast.LENGTH_SHORT).show()
+                4 -> showLogoutDialog() // Logout
+            }
+        }
+        builder.show()
+    }
+
+    // NEW: Logout confirmation dialog
+    private fun showLogoutDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Logout")
+        builder.setMessage("Are you sure you want to logout?")
+        builder.setIcon(android.R.drawable.ic_dialog_alert)
+
+        builder.setPositiveButton("Yes, Logout") { dialog, which ->
+            performLogout()
+        }
+
+        builder.setNegativeButton("Cancel") { dialog, which ->
+            dialog.dismiss()
+        }
+
+        builder.show()
+    }
+
+    // NEW: Actual logout function
+    private fun performLogout() {
+        // 1. Sign out from Firebase
+        FirebaseAuth.getInstance().signOut()
+
+        // 2. Sign out from Google (if used)
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build()
+        val googleSignInClient = GoogleSignIn.getClient(this, gso)
+        googleSignInClient.signOut()
+
+        // 3. Clear saved user preferences
+        val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+        sharedPref.edit().clear().apply()
+
+        val pantryPrefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
+        pantryPrefs.edit().clear().apply()
+
+        // 4. Show success message
+        Toast.makeText(this, "Logged out successfully!", Toast.LENGTH_SHORT).show()
+
+        // 5. Navigate to LoginActivity and clear all previous activities
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 
     private fun showPantryCodeDialog() {
