@@ -21,38 +21,29 @@ class ProfileActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupClickListeners()
-        // UPDATED: Load dynamic user profile instead of static
         loadDynamicUserProfile()
     }
 
-    // UPDATED: Load dynamic profile from saved email
     private fun loadDynamicUserProfile() {
         val sharedPref = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
         val userEmail = sharedPref.getString("user_email", null)
 
         if (userEmail != null) {
-            // Extract username from email dynamically
             val username = extractUsernameFromEmail(userEmail)
             binding.tvUserName.text = username
-
-            // Show full email instead of phone number
             binding.tvPhoneNumber.text = userEmail
         } else {
-            // Fallback if no email stored
             binding.tvUserName.text = "User"
             binding.tvPhoneNumber.text = "No email available"
         }
     }
 
-    // SAME function as HomePageActivity for consistency
     private fun extractUsernameFromEmail(email: String): String {
         return if (email.contains("@")) {
             val username = email.substringBefore("@")
 
-            // Handle different formats dynamically
             when {
                 username.contains(".") -> {
-                    // john.doe@gmail.com → "John Doe"
                     username.split(".").joinToString(" ") { word ->
                         word.replaceFirstChar {
                             if (it.isLowerCase()) it.titlecase() else it.toString()
@@ -60,7 +51,6 @@ class ProfileActivity : AppCompatActivity() {
                     }
                 }
                 username.contains("_") -> {
-                    // john_doe@gmail.com → "John Doe"
                     username.split("_").joinToString(" ") { word ->
                         word.replaceFirstChar {
                             if (it.isLowerCase()) it.titlecase() else it.toString()
@@ -68,7 +58,6 @@ class ProfileActivity : AppCompatActivity() {
                     }
                 }
                 else -> {
-                    // rajul@gmail.com → "Rajul"
                     username.replaceFirstChar {
                         if (it.isLowerCase()) it.titlecase() else it.toString()
                     }
@@ -80,7 +69,7 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // UPDATED: Settings button with logout option
+        // UPDATED: Settings button WITHOUT logout option
         binding.btnSettings.setOnClickListener {
             showSettingsOptions()
         }
@@ -106,9 +95,14 @@ class ProfileActivity : AppCompatActivity() {
             Toast.makeText(this, "Recipe Saved - Coming Soon!", Toast.LENGTH_SHORT).show()
         }
 
+        // NEW: Explicit logout button functionality
+        binding.btnLogout.setOnClickListener {
+            showLogoutDialog()
+        }
+
         // Bottom navigation
         binding.btnHome.setOnClickListener {
-            finish() // Go back to home
+            finish()
         }
 
         binding.btnRecipes.setOnClickListener {
@@ -124,14 +118,13 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-    // NEW: Settings options with logout
+    // UPDATED: Settings options WITHOUT logout
     private fun showSettingsOptions() {
         val settingsOptions = arrayOf(
             "Account Settings",
             "Privacy Settings",
             "Notifications",
-            "Help & Support",
-            "Logout"
+            "Help & Support"
         )
 
         val builder = AlertDialog.Builder(this)
@@ -142,13 +135,12 @@ class ProfileActivity : AppCompatActivity() {
                 1 -> Toast.makeText(this, "Privacy Settings - Coming Soon!", Toast.LENGTH_SHORT).show()
                 2 -> Toast.makeText(this, "Notifications - Coming Soon!", Toast.LENGTH_SHORT).show()
                 3 -> Toast.makeText(this, "Help & Support - Coming Soon!", Toast.LENGTH_SHORT).show()
-                4 -> showLogoutDialog() // Logout
             }
         }
         builder.show()
     }
 
-    // NEW: Logout confirmation dialog
+    // Logout confirmation dialog
     private fun showLogoutDialog() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Logout")
@@ -166,29 +158,29 @@ class ProfileActivity : AppCompatActivity() {
         builder.show()
     }
 
-    // NEW: Actual logout function
+    // Actual logout function
     private fun performLogout() {
-        // 1. Sign out from Firebase
+        // Sign out from Firebase
         FirebaseAuth.getInstance().signOut()
 
-        // 2. Sign out from Google (if used)
+        // Sign out from Google (if used)
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
             .build()
         val googleSignInClient = GoogleSignIn.getClient(this, gso)
         googleSignInClient.signOut()
 
-        // 3. Clear saved user preferences
+        // Clear saved user preferences
         val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
         sharedPref.edit().clear().apply()
 
         val pantryPrefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
         pantryPrefs.edit().clear().apply()
 
-        // 4. Show success message
+        // Show success message
         Toast.makeText(this, "Logged out successfully!", Toast.LENGTH_SHORT).show()
 
-        // 5. Navigate to LoginActivity and clear all previous activities
+        // Navigate to LoginActivity and clear all previous activities
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)

@@ -1,23 +1,14 @@
 package com.unh.pantrypalonevo
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.unh.pantrypalonevo.ui.theme.PantryPaloneVoTheme
-
-import android.content.Intent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -25,12 +16,13 @@ class MainActivity : ComponentActivity() {
         val currentUser = auth.currentUser
 
         if (currentUser == null) {
+            // User not logged in - go to login
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         } else {
-            // ADDED: Save user email for dynamic greeting
+            // CRITICAL: Save user email for global account-wide greeting
             val userEmail = currentUser.email ?: "user@example.com"
-            val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+            val sharedPref = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
             sharedPref.edit().putString("user_email", userEmail).apply()
 
             // Fetch fingerprint preference from Firestore
