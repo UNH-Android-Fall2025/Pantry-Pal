@@ -16,6 +16,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 
 class LoginActivity : AppCompatActivity() {
 
@@ -31,10 +32,12 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        
+        try {
+            binding = ActivityLoginBinding.inflate(layoutInflater)
+            setContentView(binding.root)
 
-        val googleButton = findViewById<com.google.android.gms.common.SignInButton>(R.id.btnGoogleSignIn)
+            val googleButton = binding.btnGoogleSignIn
 
         // Detect light/dark theme
         val nightModeFlags = resources.configuration.uiMode and
@@ -50,6 +53,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
         val googleSignInClient = GoogleSignIn.getClient(this, gso)
@@ -137,6 +141,11 @@ class LoginActivity : AppCompatActivity() {
 
             }
         }
+        } catch (e: Exception) {
+            // If login activity fails, show error and finish
+            Toast.makeText(this, "Login screen error: ${e.message}", Toast.LENGTH_SHORT).show()
+            finish()
+        }
     }
 
     // UPDATED: Handle Google Sign-In result
@@ -147,15 +156,28 @@ class LoginActivity : AppCompatActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
                 val account = task.getResult(ApiException::class.java)
-                val email = account?.email ?: "user@example.com"
-
-                Toast.makeText(this, "Google Sign-In successful", Toast.LENGTH_SHORT).show()
-                saveUserEmailAndNavigate(email)
-
+                firebaseAuthWithGoogle(account?.idToken)
             } catch (e: ApiException) {
+                Log.w("LoginActivity", "Google sign in failed", e)
                 Toast.makeText(this, "Google Sign-In failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun firebaseAuthWithGoogle(idToken: String?) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        FirebaseAuth.getInstance().signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val user = FirebaseAuth.getInstance().currentUser
+                    val email = user?.email ?: "user@example.com"
+                    Toast.makeText(this, "Google Sign-In successful", Toast.LENGTH_SHORT).show()
+                    saveUserEmailAndNavigate(email)
+                } else {
+                    Log.w("LoginActivity", "signInWithCredential:failure", task.exception)
+                    Toast.makeText(this, "Authentication failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 
     // NEW: Save user email and navigate to HomePageActivity

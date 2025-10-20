@@ -89,6 +89,7 @@ class FingerprintActivity : AppCompatActivity() {
 
     // Prevent back button
     override fun onBackPressed() {
+        super.onBackPressed()
         // Do nothing - force authentication
     }
 }

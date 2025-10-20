@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer ring background -->
+    <item>
+        <shape android:shape="ring"
+            android:innerRadius="35dp"
+            android:thickness="10dp">
+            <solid android:color="#20FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- Inner ring background -->
+    <item>
+        <shape android:shape="ring"
+            android:innerRadius="25dp"
+            android:thickness="6dp">
+            <solid android:color="#15FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- Animated progress ring -->
+    <item>
+        <rotate
+            android:drawable="@drawable/circular_progress_ring"
+            android:pivotX="50%"
+            android:pivotY="50%"
+            android:fromDegrees="0"
+            android:toDegrees="360" />
+    </item>
+</layer-list>

@@ -57,7 +57,7 @@ class SignUpActivity : AppCompatActivity() {
                             .addOnSuccessListener {
                                 Toast.makeText(this, "Sign Up Successful", Toast.LENGTH_SHORT).show()
 
-                                val loginIntent = Intent(this, LoginActivity::class.java)
+                                val loginIntent = Intent(this, SimpleLoginActivity::class.java)
                                 loginIntent.putExtra("fingerprint_enabled", fingerprintEnabled)
                                 startActivity(loginIntent)
                                 finish()
@@ -69,6 +69,12 @@ class SignUpActivity : AppCompatActivity() {
                         Toast.makeText(this, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
+        }
+
+        // Add back to login navigation
+        binding.tvBackToLogin.setOnClickListener {
+            startActivity(Intent(this, SimpleLoginActivity::class.java))
+            finish()
         }
     }
 }

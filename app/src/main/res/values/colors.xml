@@ -10,4 +10,21 @@
     <color name="button_bg">#404348</color> <!-- default for light mode -->
     <color name="button_text">#FFFFFF</color> <!-- White text for dark button -->
     <color name="primaryLight">#0EA5E9</color>
+    <!-- Splash Screen Colors -->
+    <color name="splash_gradient_start">#0EA5E9</color>
+    <color name="splash_gradient_center">#3B82F6</color>
+    <color name="splash_gradient_end">#1D1751</color>
+    <color name="splash_text_primary">#FFFFFF</color>
+    <color name="splash_text_secondary">#E5E7EB</color>
+    
+    <!-- Login Screen Colors -->
+    <color name="primary_blue">#3B82F6</color>
+    <color name="text_primary">#1F2937</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="divider">#E5E7EB</color>
+    
+    <!-- Enhanced Colors -->
+    <color name="google_blue">#4285F4</color>
+    <color name="input_background">#F8F9FA</color>
+    <color name="card_shadow">#1A000000</color>
 </resources>

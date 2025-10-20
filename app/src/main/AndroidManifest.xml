@@ -20,20 +20,27 @@
         android:theme="@style/Theme.PantryPaloneVo"
         tools:targetApi="31">
 
-        <!-- MainActivity is the launcher - checks auth status first -->
+        <!-- SplashActivity is the launcher - shows splash screen first -->
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.PantryPaloneVo.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- LoginActivity - no longer the launcher -->
+        <!-- MainActivity - checks auth status -->
         <activity
-            android:name=".LoginActivity"
+            android:name=".MainActivity"
             android:exported="false" />
+
+        <!-- SimpleLoginActivity - Main login -->
+        <activity
+            android:name=".SimpleLoginActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PantryPaloneVo.NoActionBar" />
 
         <!-- Add other activities -->
         <activity

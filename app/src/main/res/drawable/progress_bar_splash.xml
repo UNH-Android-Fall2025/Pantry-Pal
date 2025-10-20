@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background -->
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle">
+            <corners android:radius="2dp" />
+            <solid android:color="#30FFFFFF" />
+        </shape>
+    </item>
+    
+    <!-- Progress -->
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape android:shape="rectangle">
+                <corners android:radius="2dp" />
+                <gradient
+                    android:startColor="#FFFFFF"
+                    android:centerColor="#F0F9FF"
+                    android:endColor="#FFFFFF"
+                    android:angle="0"
+                    android:type="linear" />
+            </shape>
+        </clip>
+    </item>
+    
+    <!-- Animated shimmer effect -->
+    <item android:id="@android:id/secondaryProgress">
+        <clip>
+            <shape android:shape="rectangle">
+                <corners android:radius="2dp" />
+                <gradient
+                    android:startColor="#80FFFFFF"
+                    android:centerColor="#FFFFFF"
+                    android:endColor="#80FFFFFF"
+                    android:angle="45"
+                    android:type="linear" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>
