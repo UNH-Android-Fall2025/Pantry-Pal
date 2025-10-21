@@ -80,8 +80,10 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         binding.btnPublishPantry.setOnClickListener {
-            Toast.makeText(this, "Publish Pantry - Coming Soon!", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, PublishPantryActivity::class.java)
+            startActivity(intent)
         }
+
 
         binding.btnEditProfile.setOnClickListener {
             Toast.makeText(this, "Edit Profile - Coming Soon!", Toast.LENGTH_SHORT).show()
