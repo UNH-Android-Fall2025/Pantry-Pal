@@ -1,17 +1,21 @@
-package com.unh.pantrypalonevo
+package com.unh.pantrypalonevo.adapter
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.unh.pantrypalonevo.databinding.ItemPantryBinding
-import com.unh.pantrypalonevo.Pantry
+import com.unh.pantrypalonevo.model.Pantry
 
 class PantryAdapter(
-    private val pantryList: List<Pantry>,
-    private val onItemClick: (Pantry, String) -> Unit
+    private var items: List<Pantry>,
+    private val onItemClick: ((Pantry) -> Unit)? = null
 ) : RecyclerView.Adapter<PantryAdapter.PantryViewHolder>() {
 
-    inner class PantryViewHolder(val binding: ItemPantryBinding) : RecyclerView.ViewHolder(binding.root)
+    inner class PantryViewHolder(val binding: ItemPantryBinding) :
+        RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PantryViewHolder {
         val binding = ItemPantryBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -19,20 +23,42 @@ class PantryAdapter(
     }
 
     override fun onBindViewHolder(holder: PantryViewHolder, position: Int) {
-        val pantry = pantryList[position]
-        holder.binding.apply {
-            tvPantryName.text = pantry.name
-            tvPantryDescription.text = pantry.description
-            tvPantryLocation.text = pantry.location
-            tvDistance.text = "${"%.1f".format(Math.random() * 2 + 0.1)} mi"
+        val item = items[position]
+        with(holder.binding) {
+            tvPantryName.text = item.name
+            tvPantryDescription.text = item.description
+            tvPantryLocation.text = item.address   // matches your XML
+            tvDistance.text = item.distance        // matches your XML
 
-            btnMapIcon.setOnClickListener { onItemClick(pantry, "map") }
-            root.setOnClickListener { onItemClick(pantry, "view") }
+            // Tap the whole card -> (optional) open details
+            root.setOnClickListener { onItemClick?.invoke(item) }
+
+            // Tap the map icon -> open Google Maps to the pantry address
+            btnMapIcon.setOnClickListener {
+                val ctx = it.context
+                val query = Uri.encode(item.address.ifBlank { item.name })
+                val gmmIntentUri = Uri.parse("geo:0,0?q=$query")
+
+                val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
+                    // Prefer Google Maps app if present
+                    setPackage("com.google.android.apps.maps")
+                }
+
+                try {
+                    ctx.startActivity(mapIntent)
+                } catch (_: ActivityNotFoundException) {
+                    // Fallback to browser if Maps app not installed
+                    val web = Uri.parse("https://www.google.com/maps/search/?api=1&query=$query")
+                    ctx.startActivity(Intent(Intent.ACTION_VIEW, web))
+                }
+            }
         }
     }
 
-    override fun getItemCount(): Int = pantryList.size
+    override fun getItemCount(): Int = items.size
+
+    fun updateList(newList: List<Pantry>) {
+        items = newList
+        notifyDataSetChanged()
+    }
 }
-
-// Extension function for formatting
-

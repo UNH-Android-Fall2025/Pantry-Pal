@@ -8,10 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.startActivity
 import com.unh.pantrypalonevo.databinding.ActivityLoginBinding
 import java.util.concurrent.Executor
-import androidx.compose.ui.Modifier
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
@@ -24,97 +22,81 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     private lateinit var executor: Executor
-
-    private var fingerprintEnabled: Boolean = false
+    private var fingerprintEnabled = false
     private var fingerprintFailCount = 0
-
     private val RC_SIGN_IN = 9001
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
         try {
             binding = ActivityLoginBinding.inflate(layoutInflater)
             setContentView(binding.root)
 
             val googleButton = binding.btnGoogleSignIn
 
-        // Detect light/dark theme
-        val nightModeFlags = resources.configuration.uiMode and
-                android.content.res.Configuration.UI_MODE_NIGHT_MASK
-
-        when (nightModeFlags) {
-            android.content.res.Configuration.UI_MODE_NIGHT_YES -> {
-                googleButton.setColorScheme(com.google.android.gms.common.SignInButton.COLOR_LIGHT) // white button in dark mode
-            }
-            else -> {
-                googleButton.setColorScheme(com.google.android.gms.common.SignInButton.COLOR_DARK) // dark button in light mode
-            }
-        }
-
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
-        val googleSignInClient = GoogleSignIn.getClient(this, gso)
-
-        googleButton.setOnClickListener {
-            val signInIntent = googleSignInClient.signInIntent
-            startActivityForResult(signInIntent, RC_SIGN_IN)
-        }
-
-        fingerprintEnabled = intent.getBooleanExtra("fingerprint_enabled", false)
-
-        executor = ContextCompat.getMainExecutor(this)
-        biometricPrompt = BiometricPrompt(this, executor, object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                Toast.makeText(applicationContext, "Authentication error: $errString", Toast.LENGTH_SHORT).show()
+            // Adjust button for light/dark mode
+            val nightModeFlags = resources.configuration.uiMode and
+                    android.content.res.Configuration.UI_MODE_NIGHT_MASK
+            when (nightModeFlags) {
+                android.content.res.Configuration.UI_MODE_NIGHT_YES ->
+                    googleButton.setColorScheme(com.google.android.gms.common.SignInButton.COLOR_LIGHT)
+                else ->
+                    googleButton.setColorScheme(com.google.android.gms.common.SignInButton.COLOR_DARK)
             }
 
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                Toast.makeText(applicationContext, "Fingerprint Authentication succeeded", Toast.LENGTH_SHORT).show()
+            // Google sign-in setup
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build()
+            val googleSignInClient = GoogleSignIn.getClient(this, gso)
 
-                // Save preference to SharedPreferences for offline access
-                val prefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
-                prefs.edit().putBoolean("fingerprint_enabled", true).apply()
+            googleButton.setOnClickListener {
+                val signInIntent = googleSignInClient.signInIntent
+                startActivityForResult(signInIntent, RC_SIGN_IN)
+            }
 
-                // UPDATED: Get current user's email for fingerprint login
-                val currentUser = FirebaseAuth.getInstance().currentUser
-                if (currentUser != null) {
-                    saveUserEmailAndNavigate(currentUser.email ?: "user@example.com")
-                } else {
-                    navigateToHome()
+            fingerprintEnabled = intent.getBooleanExtra("fingerprint_enabled", false)
+
+            executor = ContextCompat.getMainExecutor(this)
+            biometricPrompt = BiometricPrompt(this, executor, object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    Toast.makeText(applicationContext, "Authentication error: $errString", Toast.LENGTH_SHORT).show()
                 }
-            }
 
-            override fun onAuthenticationFailed() {
-                fingerprintFailCount++
-                Toast.makeText(applicationContext, "Fingerprint Authentication failed", Toast.LENGTH_SHORT).show()
-                if (fingerprintFailCount >= 2) {
-                    Toast.makeText(applicationContext, "Failed twice, login with Password now.", Toast.LENGTH_SHORT).show()
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    Toast.makeText(applicationContext, "Fingerprint Authentication succeeded", Toast.LENGTH_SHORT).show()
+                    val prefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
+                    prefs.edit().putBoolean("fingerprint_enabled", true).apply()
+                    val currentUser = FirebaseAuth.getInstance().currentUser
+                    if (currentUser != null) {
+                        saveUserEmailAndNavigate(currentUser.email ?: "user@example.com")
+                    } else navigateToHome()
                 }
+
+                override fun onAuthenticationFailed() {
+                    fingerprintFailCount++
+                    Toast.makeText(applicationContext, "Fingerprint Authentication failed", Toast.LENGTH_SHORT).show()
+                    if (fingerprintFailCount >= 2)
+                        Toast.makeText(applicationContext, "Failed twice, login with Password now.", Toast.LENGTH_SHORT).show()
+                }
+            })
+
+            promptInfo = BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Fingerprint Login for PantryPal")
+                .setSubtitle("Use your fingerprint to login quickly")
+                .setNegativeButtonText("Use Password")
+                .build()
+
+            binding.tvForgotPassword.setOnClickListener {
+                startActivity(Intent(this, ForgotPasswordActivity::class.java))
             }
-        })
 
-        promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Fingerprint Login for PantryPal")
-            .setSubtitle("Use your fingerprint to login quickly")
-            .setNegativeButtonText("Use Password")
-            .build()
+            binding.tvSignUp.setOnClickListener {
+                startActivity(Intent(this, SignUpActivity::class.java))
+            }
 
-        binding.tvForgotPassword.setOnClickListener {
-            startActivity(Intent(this, ForgotPasswordActivity::class.java))
-        }
-
-        binding.tvSignUp.setOnClickListener {
-            startActivity(Intent(this, SignUpActivity::class.java))
-        }
-
-        binding.btnLogin.setOnClickListener {
-            if (fingerprintEnabled && fingerprintFailCount < 2 &&
-                BiometricManager.from(this).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS) {
-                biometricPrompt.authenticate(promptInfo)
-            } else {
+            binding.btnLogin.setOnClickListener {
                 val email = binding.etEmail.text.toString().trim()
                 val password = binding.etPassword.text.toString().trim()
 
@@ -123,35 +105,28 @@ class LoginActivity : AppCompatActivity() {
                     return@setOnClickListener
                 }
 
-                // Authenticate with Firebase
                 FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
-
-                            // ADD THESE 3 LINES:
                             val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
-                            sharedPref.edit().putString("user_email", email).apply()
-
-                            navigateToHome() // This line stays the same
+                            sharedPref.edit().putString("user_email", email)
+                                .putString("user_name", email.substringBefore("@")) // default name
+                                .apply()
+                            navigateToHome()
                         } else {
                             Toast.makeText(this, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
-
             }
-        }
         } catch (e: Exception) {
-            // If login activity fails, show error and finish
             Toast.makeText(this, "Login screen error: ${e.message}", Toast.LENGTH_SHORT).show()
             finish()
         }
     }
 
-    // UPDATED: Handle Google Sign-In result
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
         if (requestCode == RC_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
@@ -171,8 +146,18 @@ class LoginActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     val user = FirebaseAuth.getInstance().currentUser
                     val email = user?.email ?: "user@example.com"
-                    Toast.makeText(this, "Google Sign-In successful", Toast.LENGTH_SHORT).show()
-                    saveUserEmailAndNavigate(email)
+                    val displayName = user?.displayName ?: "User"
+
+                    // ✅ Save both email & name
+                    val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+                    with(sharedPref.edit()) {
+                        putString("user_email", email)
+                        putString("user_name", displayName)
+                        apply()
+                    }
+
+                    Toast.makeText(this, "Welcome $displayName!", Toast.LENGTH_SHORT).show()
+                    navigateToHome()
                 } else {
                     Log.w("LoginActivity", "signInWithCredential:failure", task.exception)
                     Toast.makeText(this, "Authentication failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
@@ -180,21 +165,17 @@ class LoginActivity : AppCompatActivity() {
             }
     }
 
-    // NEW: Save user email and navigate to HomePageActivity
     private fun saveUserEmailAndNavigate(email: String) {
-        // Save email for dynamic greeting
         val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("user_email", email)
+            putString("user_name", email.substringBefore("@"))
             apply()
         }
-
-        // Navigate to HomePageActivity (not MainActivity)
         navigateToHome()
     }
 
     private fun navigateToHome() {
-        // UPDATED: Navigate to HomePageActivity instead of MainActivity
         startActivity(Intent(this, HomePageActivity::class.java))
         finish()
     }

@@ -1,9 +1,8 @@
-package com.unh.pantrypalonevo
+package com.unh.pantrypalonevo.model
 
 data class Pantry(
-    val name: String,
-    val description: String,
-    val location: String,
-    val latitude: Double = 0.0,
-    val longitude: Double = 0.0
+    val name: String = "",
+    val description: String = "",
+    val address: String = "",
+    val distance: String = ""
 )
