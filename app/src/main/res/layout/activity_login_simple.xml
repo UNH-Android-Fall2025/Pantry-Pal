@@ -84,9 +84,25 @@
                 android:inputType="textEmailAddress"
                 android:background="@drawable/rounded_edittext"
                 android:padding="16dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="8dp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary" />
+
+            <!-- Use Different Email Link (hidden by default) -->
+            <TextView
+                android:id="@+id/tvUseDifferentEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Use different email"
+                android:textColor="@color/primary_blue"
+                android:textSize="12sp"
+                android:layout_gravity="end"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="@drawable/rounded_text_button"
+                android:padding="8dp"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone" />
 
             <!-- Password Input -->
             <EditText

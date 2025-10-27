@@ -30,8 +30,17 @@ class MainActivity : ComponentActivity() {
             db.collection("users").document(currentUser.uid).get()
                 .addOnSuccessListener { document ->
                     val fingerprintEnabled = document.getBoolean("fingerprintEnabled") ?: false
+                    val username = document.getString("username") ?: "User${System.currentTimeMillis().toString().takeLast(6)}"
+                    
                     val prefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
                     prefs.edit().putBoolean("fingerprint_enabled", fingerprintEnabled).apply()
+                    
+                    // Save username to SharedPreferences and update user_name to use username
+                    val userPrefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+                    userPrefs.edit()
+                        .putString("user_username", username)
+                        .putString("user_name", username) // Update user_name to use username
+                        .apply()
 
                     val next = if (fingerprintEnabled)
                         FingerprintActivity::class.java else HomePageActivity::class.java

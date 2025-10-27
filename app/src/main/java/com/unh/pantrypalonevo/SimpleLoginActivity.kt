@@ -1,15 +1,22 @@
 package com.unh.pantrypalonevo
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
+import java.util.concurrent.Executor
 
 class SimpleLoginActivity : AppCompatActivity() {
     
@@ -19,8 +26,14 @@ class SimpleLoginActivity : AppCompatActivity() {
     private lateinit var btnGoogleSignIn: android.widget.LinearLayout
     private lateinit var tvForgotPassword: android.widget.TextView
     private lateinit var tvSignUp: android.widget.TextView
+    private lateinit var tvUseDifferentEmail: android.widget.TextView
     
     private lateinit var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient
+    private lateinit var executor: Executor
+    private lateinit var biometricPrompt: BiometricPrompt
+    private lateinit var promptInfo: BiometricPrompt.PromptInfo
+    private var isFingerprintEnabled = false
+    private var rememberedEmail = ""
     
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -68,10 +81,12 @@ class SimpleLoginActivity : AppCompatActivity() {
             btnGoogleSignIn = findViewById(R.id.btnGoogleSignIn)
             tvForgotPassword = findViewById(R.id.tvForgotPassword)
             tvSignUp = findViewById(R.id.tvSignUp)
+            tvUseDifferentEmail = findViewById(R.id.tvUseDifferentEmail)
             
             // Check if all views are found
             if (etEmail == null || etPassword == null || btnLogin == null || 
-                btnGoogleSignIn == null || tvForgotPassword == null || tvSignUp == null) {
+                btnGoogleSignIn == null || tvForgotPassword == null || tvSignUp == null ||
+                tvUseDifferentEmail == null) {
                 Toast.makeText(this, "Login screen setup failed", Toast.LENGTH_SHORT).show()
                 finish()
                 return
@@ -83,9 +98,25 @@ class SimpleLoginActivity : AppCompatActivity() {
             // Setup click listeners
             setupClickListeners()
             
+            // Load remembered email and check for fingerprint
+            loadRememberedEmail()
+            // Check fingerprint after a short delay to ensure email is loaded
+            etEmail.post {
+                checkFingerprintAvailability()
+            }
+            
         } catch (e: Exception) {
             Toast.makeText(this, "Login screen error: ${e.message}", Toast.LENGTH_SHORT).show()
             finish()
+        }
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Refresh fingerprint check when returning to this activity
+        // This ensures fingerprint prompt shows if user enabled it in Account Settings
+        etEmail.post {
+            checkFingerprintAvailability()
         }
     }
     
@@ -163,24 +194,10 @@ class SimpleLoginActivity : AppCompatActivity() {
     
     private fun setupClickListeners() {
         btnLogin.setOnClickListener {
-            val email = etEmail.text.toString().trim()
+            val email = if (rememberedEmail.isNotEmpty()) rememberedEmail else etEmail.text.toString().trim()
             val password = etPassword.text.toString().trim()
             
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            
-            // Authenticate with Firebase
-            FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
-                        navigateToHome()
-                    } else {
-                        Toast.makeText(this, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                    }
-                }
+            performEmailPasswordLogin(email, password)
         }
         
         tvForgotPassword.setOnClickListener {
@@ -189,6 +206,17 @@ class SimpleLoginActivity : AppCompatActivity() {
         
         tvSignUp.setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))
+        }
+        
+        tvUseDifferentEmail.setOnClickListener {
+            // Reset to allow email editing
+            etEmail.isEnabled = true
+            etEmail.alpha = 1.0f
+            etEmail.setText("")
+            etEmail.hint = "Email"
+            etEmail.requestFocus()
+            tvUseDifferentEmail.visibility = View.GONE
+            rememberedEmail = ""
         }
     }
     
@@ -223,12 +251,41 @@ class SimpleLoginActivity : AppCompatActivity() {
         try {
             val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
             sharedPref.edit().putString("user_email", email).apply()
+            
+            // Check if user has a username, if not generate one
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            if (currentUser != null) {
+                val db = FirebaseFirestore.getInstance()
+                db.collection("users").document(currentUser.uid).get()
+                    .addOnSuccessListener { document ->
+                        val username = document.getString("username")
+                        if (username.isNullOrBlank()) {
+                            // Generate and save username for existing user
+                            val newUsername = "User${System.currentTimeMillis().toString().takeLast(6)}"
+                            db.collection("users").document(currentUser.uid)
+                                .update("username", newUsername)
+                                .addOnSuccessListener {
+                                    sharedPref.edit()
+                                        .putString("user_username", newUsername)
+                                        .putString("user_name", newUsername) // Use username as primary display name
+                                        .apply()
+                                }
+                        } else {
+                            sharedPref.edit()
+                                .putString("user_username", username)
+                                .putString("user_name", username) // Use username as primary display name
+                                .apply()
+                        }
+                    }
+            }
+            
             Toast.makeText(this, "User data saved: $email", Toast.LENGTH_SHORT).show()
             navigateToHome()
         } catch (e: Exception) {
             Toast.makeText(this, "Error saving user data: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
+    
     
     private fun navigateToHome() {
         try {
@@ -240,5 +297,119 @@ class SimpleLoginActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Toast.makeText(this, "Navigation error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun loadRememberedEmail() {
+        val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+        rememberedEmail = prefs.getString("user_email", "") ?: ""
+        
+        if (rememberedEmail.isNotEmpty()) {
+            etEmail.setText(rememberedEmail)
+            etEmail.isEnabled = false // Disable email editing
+            etEmail.alpha = 0.7f // Make it look disabled
+            etPassword.requestFocus() // Auto-focus on password
+            
+            // Show a subtle indicator that email is remembered
+            etEmail.hint = "Remembered email"
+            
+            // Show "Use Different Email" option
+            tvUseDifferentEmail.visibility = View.VISIBLE
+            
+        }
+    }
+
+    private fun checkFingerprintAvailability() {
+        val biometricManager = BiometricManager.from(this)
+        when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK)) {
+            BiometricManager.BIOMETRIC_SUCCESS -> {
+                // Check if user has enabled fingerprint in settings
+                val prefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
+                isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
+                
+                
+                if (isFingerprintEnabled && rememberedEmail.isNotEmpty()) {
+                    // Show fingerprint option
+                    showFingerprintOption()
+                }
+            }
+            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
+                // No fingerprint hardware
+            }
+            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
+                // Fingerprint hardware unavailable
+            }
+            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
+                // No fingerprints enrolled
+            }
+        }
+    }
+
+    private fun showFingerprintOption() {
+        // Add a fingerprint button or show prompt
+        setupBiometricPrompt()
+        showBiometricPrompt()
+    }
+
+    private fun setupBiometricPrompt() {
+        executor = ContextCompat.getMainExecutor(this)
+        biometricPrompt = BiometricPrompt(this, executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    // User cancelled or error - continue with password login
+                    etPassword.requestFocus()
+                }
+
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    // Fingerprint success - proceed with login
+                    performEmailPasswordLogin(rememberedEmail, "")
+                }
+
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+                    Toast.makeText(this@SimpleLoginActivity, "Fingerprint not recognized. Try again.", Toast.LENGTH_SHORT).show()
+                }
+            })
+
+        promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Fingerprint Login")
+            .setSubtitle("Use your fingerprint to sign in to $rememberedEmail")
+            .setNegativeButtonText("Use Password")
+            .build()
+    }
+
+    private fun showBiometricPrompt() {
+        biometricPrompt.authenticate(promptInfo)
+    }
+
+    private fun performEmailPasswordLogin(email: String, password: String) {
+        if (email.isEmpty()) {
+            Toast.makeText(this, "Please enter your email", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (password.isEmpty() && !isFingerprintEnabled) {
+            Toast.makeText(this, "Please enter your password", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // If password is empty but fingerprint is enabled, it means user used fingerprint
+        if (password.isEmpty() && isFingerprintEnabled) {
+            // Proceed with saved credentials (fingerprint authentication)
+            saveUserEmailAndNavigate(email)
+            return
+        }
+
+        // Regular email/password login
+        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
+                    saveUserEmailAndNavigate(email)
+                } else {
+                    Toast.makeText(this, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 }

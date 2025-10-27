@@ -3,22 +3,27 @@ package com.unh.pantrypalonevo
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.pantrypalonevo.databinding.ActivityProfileBinding
 
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        db = FirebaseFirestore.getInstance()
 
         // ✅ Fix: ensure bottom bar doesn’t block clicks
         binding.bottomNavigation.bringToFront()
@@ -43,6 +48,7 @@ class ProfileActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
         val savedName = prefs.getString("user_name", null)
         val savedEmail = prefs.getString("user_email", null)
+        val savedUsername = prefs.getString("user_username", null)
 
         // Fallbacks: Firebase displayName → derive from email → "User"
         val authName = FirebaseAuth.getInstance().currentUser?.displayName
@@ -53,7 +59,14 @@ class ProfileActivity : AppCompatActivity() {
             else -> "User"
         }
 
-        binding.tvUserName.text = finalName
+        // Display username if available, otherwise show name
+        val displayText = if (!savedUsername.isNullOrBlank()) {
+            savedUsername
+        } else {
+            finalName
+        }
+
+        binding.tvUserName.text = displayText
         binding.tvPhoneNumber.text =
             savedEmail ?: FirebaseAuth.getInstance().currentUser?.email ?: "No email available"
     }
@@ -80,7 +93,7 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         binding.btnEditProfile.setOnClickListener {
-            Toast.makeText(this, "Edit Profile - Coming Soon!", Toast.LENGTH_SHORT).show()
+            showEditUsernameDialog()
         }
 
         binding.btnShareProfile.setOnClickListener { shareProfile() }
@@ -116,13 +129,15 @@ class ProfileActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Settings")
             .setItems(options) { _, which ->
-                val msg = when (which) {
-                    0 -> "Account Settings - Coming Soon!"
-                    1 -> "Privacy Settings - Coming Soon!"
-                    2 -> "Notifications - Coming Soon!"
-                    else -> "Help & Support - Coming Soon!"
+                when (which) {
+                    0 -> {
+                        // Navigate to Account Settings
+                        startActivity(Intent(this, AccountSettingsActivity::class.java))
+                    }
+                    1 -> Toast.makeText(this, "Privacy Settings - Coming Soon!", Toast.LENGTH_SHORT).show()
+                    2 -> Toast.makeText(this, "Notifications - Coming Soon!", Toast.LENGTH_SHORT).show()
+                    else -> Toast.makeText(this, "Help & Support - Coming Soon!", Toast.LENGTH_SHORT).show()
                 }
-                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
             }
             .show()
     }
@@ -175,4 +190,85 @@ class ProfileActivity : AppCompatActivity() {
             }
         )
     }
+
+    private fun showEditUsernameDialog() {
+        val prefs = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+        val currentUsername = prefs.getString("user_username", "") ?: ""
+        
+        val editText = EditText(this).apply {
+            setText(currentUsername)
+            hint = "Enter new username"
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Edit Username")
+            .setMessage("Enter a unique username (without @ symbol)")
+            .setView(editText)
+            .setPositiveButton("Save") { _, _ ->
+                val newUsername = editText.text.toString().trim()
+                if (newUsername.isNotEmpty() && newUsername != currentUsername) {
+                    validateAndUpdateUsername(newUsername)
+                } else if (newUsername == currentUsername) {
+                    Toast.makeText(this, "Username unchanged", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Please enter a valid username", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun validateAndUpdateUsername(newUsername: String) {
+        // Check if username is valid (no spaces, special characters except underscore)
+        if (!newUsername.matches(Regex("^[a-zA-Z0-9_]+$"))) {
+            Toast.makeText(this, "Username can only contain letters, numbers, and underscores", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (newUsername.length < 3 || newUsername.length > 20) {
+            Toast.makeText(this, "Username must be 3-20 characters long", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Check if user is trying to keep their current username
+        val prefs = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+        val currentUsername = prefs.getString("user_username", "") ?: ""
+        
+        if (newUsername == currentUsername) {
+            Toast.makeText(this, "This is already your username", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // For now, we'll skip uniqueness checking and just update the username
+        // This avoids permission issues while still allowing username changes
+        updateUsernameDirectly(newUsername)
+    }
+
+    private fun updateUsernameDirectly(newUsername: String) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser == null) {
+            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Update in Firebase
+        db.collection("users").document(currentUser.uid)
+            .update("username", newUsername)
+            .addOnSuccessListener {
+                // Update in SharedPreferences
+                val prefs = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+                prefs.edit()
+                    .putString("user_username", newUsername)
+                    .putString("user_name", newUsername) // Update user_name to use username
+                    .apply()
+                
+                // Refresh the profile display
+                loadDynamicUserProfile()
+                Toast.makeText(this, "Username updated successfully!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error updating username: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
 }

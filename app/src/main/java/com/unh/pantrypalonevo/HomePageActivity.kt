@@ -28,10 +28,19 @@ class HomePageActivity : AppCompatActivity() {
         binding = ActivityHomePageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // ✅ Load logged-in user’s name
+        // ✅ Load logged-in user's username
         val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
-        val userName = prefs.getString("user_name", "User")
-        binding.tvGreeting.text = "Hello $userName !!"
+        val username = prefs.getString("user_username", null)
+        val displayName = prefs.getString("user_name", "User")
+        
+        // Use username if available, otherwise fallback to display name
+        val greetingName = if (!username.isNullOrBlank()) {
+            username
+        } else {
+            displayName
+        }
+        
+        binding.tvGreeting.text = "Hello $greetingName !!"
         binding.tvSubtitle.text = "Free Pantry near you"
 
         // ✅ RecyclerView setup

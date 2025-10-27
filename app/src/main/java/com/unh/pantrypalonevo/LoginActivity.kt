@@ -152,7 +152,7 @@ class LoginActivity : AppCompatActivity() {
                     val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
                     with(sharedPref.edit()) {
                         putString("user_email", email)
-                        putString("user_name", displayName)
+                        putString("user_name", displayName) // Will be updated to username later
                         apply()
                     }
 

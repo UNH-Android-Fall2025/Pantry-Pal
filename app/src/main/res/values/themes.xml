@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.PantryPaloneVo" parent="Theme.AppCompat.DayNight">
+    <style name="Theme.PantryPal" parent="Theme.AppCompat.DayNight">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@android:color/holo_blue_dark</item>
         <item name="colorPrimaryVariant">@android:color/holo_blue_light</item>
@@ -11,12 +11,13 @@
         <item name="colorOnSecondary">@android:color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
-    </style>
-
-    <!-- NoActionBar theme for SplashActivity -->
-    <style name="Theme.PantryPaloneVo.NoActionBar" parent="Theme.PantryPaloneVo">
+        <!-- Hide action bar by default -->
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+    </style>
+
+    <!-- NoActionBar theme for SplashActivity (now same as base theme) -->
+    <style name="Theme.PantryPal.NoActionBar" parent="Theme.PantryPal">
         <item name="android:windowFullscreen">false</item>
     </style>
 </resources>

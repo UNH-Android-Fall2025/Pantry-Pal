@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.pantrypalonevo.databinding.ActivitySignUpBinding
+import java.util.UUID
 
 class SignUpActivity : AppCompatActivity() {
 
@@ -14,6 +15,11 @@ class SignUpActivity : AppCompatActivity() {
     private var fingerprintEnabled = false
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
+
+    private fun generateUniqueUsername(): String {
+        val uniqueId = UUID.randomUUID().toString().substring(0, 8)
+        return "User$uniqueId"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,8 +46,10 @@ class SignUpActivity : AppCompatActivity() {
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val userId = auth.currentUser?.uid ?: ""
+                        val username = generateUniqueUsername()
                         val userMap = hashMapOf(
                             "email" to email,
+                            "username" to username,
                             "fingerprintEnabled" to fingerprintEnabled,
                             "createdAt" to System.currentTimeMillis(),
                             "first" to "",
@@ -55,6 +63,14 @@ class SignUpActivity : AppCompatActivity() {
 
                         db.collection("users").document(userId).set(userMap)
                             .addOnSuccessListener {
+                                // Save username to SharedPreferences
+                                val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+                                sharedPref.edit()
+                                    .putString("user_email", email)
+                                    .putString("user_name", username) // Use username as primary display name
+                                    .putString("user_username", username)
+                                    .apply()
+                                
                                 Toast.makeText(this, "Sign Up Successful", Toast.LENGTH_SHORT).show()
 
                                 val loginIntent = Intent(this, SimpleLoginActivity::class.java)

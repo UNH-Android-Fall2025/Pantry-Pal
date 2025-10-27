@@ -1,6 +1,7 @@
 package com.unh.pantrypalonevo
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -21,6 +22,7 @@ class PublishPantryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPublishPantryBinding
     private var capturedImageBitmap: Bitmap? = null
+    private var detectedProducts: ArrayList<DetectedProduct> = arrayListOf()
 
     private val CAMERA_PERMISSION_CODE = 100
 
@@ -71,6 +73,16 @@ class PublishPantryActivity : AppCompatActivity() {
         binding.btnFromGallery.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
+
+        binding.btnContinue.setOnClickListener {
+            if (detectedProducts.isNotEmpty()) {
+                val intent = Intent(this, ConfirmProductsActivity::class.java)
+                intent.putParcelableArrayListExtra("detected_products", detectedProducts)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "No products detected. Please take a photo first.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun checkCameraPermission(): Boolean {
@@ -99,6 +111,8 @@ class PublishPantryActivity : AppCompatActivity() {
         labeler.process(image)
             .addOnSuccessListener { labels ->
                 binding.progressBar.visibility = View.GONE
+                detectedProducts.clear() // Clear previous results
+                
                 if (labels.isNotEmpty()) {
                     val groceryKeywords = listOf(
                         "food", "fruit", "vegetable", "drink", "beverage", "dairy",
@@ -108,26 +122,42 @@ class PublishPantryActivity : AppCompatActivity() {
                         "tomato", "potato", "onion", "chicken", "beef", "fish", "egg"
                     )
 
-                    val groceryProducts = labels.filter { label ->
+                    val groceryLabels = labels.filter { label ->
                         groceryKeywords.any { keyword ->
                             label.text.lowercase().contains(keyword)
                         }
-                    }.map { label ->
-                        "${label.text} (${(label.confidence * 100).toInt()}%)"
                     }
 
-                    if (groceryProducts.isNotEmpty()) {
-                        binding.tvDetectionStatus.text = "Detected: ${groceryProducts.joinToString(", ")}"
+                    if (groceryLabels.isNotEmpty()) {
+                        // Create DetectedProduct objects
+                        detectedProducts = ArrayList(groceryLabels.map { label ->
+                            DetectedProduct(
+                                name = label.text,
+                                confidence = label.confidence,
+                                quantity = 1,
+                                approved = false
+                            )
+                        })
+                        
+                        val productNames = detectedProducts.map { 
+                            "${it.name} (${(it.confidence * 100).toInt()}%)" 
+                        }
+                        
+                        binding.tvDetectionStatus.text = "Detected: ${productNames.joinToString(", ")}"
+                        binding.btnContinue.visibility = View.VISIBLE
                     } else {
                         binding.tvDetectionStatus.text = "No grocery items detected."
+                        binding.btnContinue.visibility = View.GONE
                     }
                 } else {
                     binding.tvDetectionStatus.text = "No products detected."
+                    binding.btnContinue.visibility = View.GONE
                 }
             }
             .addOnFailureListener { e ->
                 binding.progressBar.visibility = View.GONE
                 binding.tvDetectionStatus.text = "Detection failed: ${e.message}"
+                binding.btnContinue.visibility = View.GONE
             }
     }
 
