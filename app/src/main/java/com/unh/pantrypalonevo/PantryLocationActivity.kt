@@ -12,7 +12,7 @@ class PantryLocationActivity : AppCompatActivity() {
         Toast.makeText(this, "Location Activity - Coming Soon!", Toast.LENGTH_SHORT).show()
 
         val products = intent.getParcelableArrayListExtra<DetectedProduct>("approved_products")
-        // For now, just log the products
+        // log the products
         products?.forEach { product ->
             println("Product: ${product.name}, Quantity: ${product.quantity}")
         }
