@@ -28,24 +28,16 @@ class HomePageActivity : AppCompatActivity() {
         binding = ActivityHomePageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // ✅ Load logged-in user's username
         val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
         val username = prefs.getString("user_username", null)
         val displayName = prefs.getString("user_name", "User")
-        
-        // Use username if available, otherwise fallback to display name
-        val greetingName = if (!username.isNullOrBlank()) {
-            username
-        } else {
-            displayName
-        }
-        
+
+        val greetingName = if (!username.isNullOrBlank()) username else displayName
+
         binding.tvGreeting.text = "Hello $greetingName !!"
         binding.tvSubtitle.text = "Free Pantry near you"
 
-        // ✅ RecyclerView setup
         pantryAdapter = PantryAdapter(pantryList) { pantry ->
-            // On click → open PantryLocationActivity (details)
             val intent = Intent(this, PantryLocationActivity::class.java)
             intent.putExtra("pantry_name", pantry.name)
             intent.putExtra("pantry_address", pantry.address)
@@ -55,18 +47,13 @@ class HomePageActivity : AppCompatActivity() {
         binding.rvPantryList.layoutManager = LinearLayoutManager(this)
         binding.rvPantryList.adapter = pantryAdapter
 
-        // ✅ Fused location client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        // ✅ Load sample pantries (replace with Firestore later)
         loadSamplePantries()
 
-        // ✅ Handle location icon
         binding.ivLocationButton.setOnClickListener {
             requestLocationPermissionAndFetch()
         }
 
-        // ✅ Search filter
         binding.btnSearch.setOnClickListener {
             val query = binding.etSearch.text.toString().trim()
             if (query.isEmpty()) {
@@ -80,28 +67,26 @@ class HomePageActivity : AppCompatActivity() {
             }
         }
 
-        // ✅ Bottom navigation wiring
         binding.btnHome.setOnClickListener {
-            // already on Home — scroll list to top as a UX nicety
             if (pantryList.isNotEmpty()) binding.rvPantryList.smoothScrollToPosition(0)
         }
+
         binding.btnProfile.setOnClickListener {
-            // open your profile screen (change class if your activity name differs)
             startActivity(Intent(this, ProfileActivity::class.java))
         }
+
         binding.btnRecipes.setOnClickListener {
-            Toast.makeText(this, "Recipes page coming soon!", Toast.LENGTH_SHORT).show()
-        }
-        binding.btnCart.setOnClickListener {
-            Toast.makeText(this, "Cart page coming soon!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "🍳 Recipes page coming soon!", Toast.LENGTH_SHORT).show()
         }
 
-        // Ensure bottom bar always receives taps (avoid overlap from list)
+        binding.btnCart.setOnClickListener {
+            Toast.makeText(this, "🛒 Cart feature coming soon!", Toast.LENGTH_SHORT).show()
+        }
+
         binding.bottomNavigation.bringToFront()
         binding.bottomNavigation.isClickable = true
     }
 
-    // === SAMPLE PANTRIES (you can replace with real Firestore later) ===
     private fun loadSamplePantries() {
         pantryList.clear()
         pantryList.addAll(
@@ -135,7 +120,6 @@ class HomePageActivity : AppCompatActivity() {
         pantryAdapter.notifyDataSetChanged()
     }
 
-    // === LOCATION PERMISSION & FETCH ===
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) fetchUserLocation()
