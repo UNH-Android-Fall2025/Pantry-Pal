@@ -96,6 +96,10 @@ class HomePageActivity : AppCompatActivity() {
             Toast.makeText(this, "Cart page coming soon!", Toast.LENGTH_SHORT).show()
         }
 
+        // ✅ Launch Pantry Detector (for testing object detection)
+        // You can add a button in the layout or use this as a quick test entry point
+        // For now, you can launch it via ADB: adb shell am start -n com.unh.pantrypalonevo/.PantryDetectorActivity
+
         // Ensure bottom bar always receives taps (avoid overlap from list)
         binding.bottomNavigation.bringToFront()
         binding.bottomNavigation.isClickable = true

@@ -2,17 +2,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Add biometric permission -->
-    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    
-    <!-- Camera permissions for take photo feature -->
+    <!-- Camera Feature & Permission (ONCE ONLY) -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="true" />
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <!-- Internet & Network (ONCE ONLY) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Biometric -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
     <application
         android:allowBackup="true"
@@ -22,57 +23,55 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PantryPal"
+        android:theme="@style/Theme.PantryPaloneVo"
         tools:targetApi="31">
 
-        <!-- SplashActivity is the launcher - shows splash screen first -->
+        <!-- Main Activity -->
         <activity
-            android:name=".SplashActivity"
-            android:exported="true"
-            android:theme="@style/Theme.PantryPal.NoActionBar">
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- MainActivity - checks auth status -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
+        <!-- Authentication Activities -->
+        <activity android:name=".LoginActivity" />
+        <activity android:name=".SimpleLoginActivity" />
+        <activity android:name=".SignUpActivity" />
+        <activity android:name=".ForgotPasswordActivity" />
 
-        <!-- SimpleLoginActivity - Main login -->
+        <!-- Main App Activities -->
+        <activity android:name=".HomePageActivity" />
+        <activity android:name=".FingerprintActivity" />
+        <activity android:name=".ProfileActivity" />
+        <activity android:name=".AccountSettingsActivity" />
+        <activity android:name=".SplashActivity" />
+
+        <!-- Pantry Related Activities -->
+        <activity android:name=".PublishPantryActivity" />
         <activity
-            android:name=".SimpleLoginActivity"
+            android:name=".ItemDetailsActivity"
             android:exported="false"
-            android:theme="@style/Theme.PantryPal.NoActionBar" />
-
-        <!-- Add other activities -->
+            android:parentActivityName=".PublishPantryActivity" />
         <activity
-            android:name=".SignUpActivity"
-            android:exported="false" />
+            android:name=".ReviewSavedItemsActivity"
+            android:exported="false"
+            android:parentActivityName=".PublishPantryActivity" />
+        <activity android:name=".PublishPantryFormActivity" />
+        <activity android:name=".PantryLocationActivity" />
+        <activity android:name=".ReviewProductsActivity" />
+        <activity android:name=".ConfirmProductsActivity" />
 
-        <activity
-            android:name=".ForgotPasswordActivity"
-            android:exported="false" />
+        <!-- Detection Activities -->
+        <activity android:name=".RealtimeDetectionActivity" />
 
+        <!-- Pantry Detector (ONCE ONLY - REMOVED DUPLICATE!) -->
         <activity
-            android:name=".HomePageActivity"
+            android:name=".PantryDetectorActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
-
-        <activity
-            android:name=".FingerprintActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ConfirmProductsActivity"
-            android:exported="false" />
-
-        <activity android:name=".PublishPantryActivity" android:exported="false"/>
-
-        <activity android:name=".AccountSettingsActivity" android:exported="false"/>
 
     </application>
 

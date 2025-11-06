@@ -1,4 +1,9 @@
 package com.unh.pantrypalonevo
 
-class Detection {
-}
+import android.graphics.RectF
+
+data class Detection(
+    val label: String,
+    val confidence: Float,
+    val boundingBox: RectF
+)

@@ -5,14 +5,28 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+    id("kotlin-parcelize")
 }
 
 android {
     namespace = "com.unh.pantrypalonevo"
     compileSdk = 36
+
     buildFeatures {
         viewBinding = true
+        mlModelBinding = true  // 🔥 Enable ML Model Binding
     }
+
+    // 🔥 FIXED: Use packaging instead of aaptOptions
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
     defaultConfig {
         applicationId = "com.unh.pantrypalonevo"
         minSdk = 33
@@ -21,9 +35,20 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // 🔥 Prevent TFLite compression (NEW WAY)
+        // Include x86_64 for emulator testing (TensorFlow Lite supports CPU inference on x86_64)
+        ndk {
+            abiFilters.clear()
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
+        }
     }
 
     buildTypes {
+        debug {
+            // Disable split APKs for debug builds to support all architectures (including x86_64 emulators)
+            isDebuggable = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -32,16 +57,27 @@ android {
             )
         }
     }
+
+    // Disable split APKs for debug builds (creates universal APK)
+    splits {
+        abi {
+            isEnable = false
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
     }
+
     lint {
         baseline = file("lint-baseline.xml")
     }
@@ -83,11 +119,30 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
 
-    // CORRECT - Kotlin syntax
+    // 🔥 TensorFlow Lite for YOLOv8 (90+ FPS!)
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+
+    // CameraX for real-time detection
     val cameraxVersion = "1.3.0"
+    implementation("androidx.camera:camera-core:$cameraxVersion")
     implementation("androidx.camera:camera-camera2:$cameraxVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
     implementation("androidx.camera:camera-view:$cameraxVersion")
-    implementation("com.google.mlkit:image-labeling:17.0.8")
 
+    // ML Kit (Image labeling and text recognition)
+    implementation("com.google.mlkit:image-labeling:17.0.8")
+    implementation("com.google.mlkit:object-detection:17.0.1")
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+
+    // ✅ OkHttp for web API calls (NO dependency conflicts!)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Gson for JSON parsing
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // Coroutines for async processing
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }

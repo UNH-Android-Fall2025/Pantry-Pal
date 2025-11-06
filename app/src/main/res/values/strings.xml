@@ -1,4 +1,46 @@
 <resources>
     <string name="app_name">Pantry Pal</string>
     <string name="default_web_client_id">499339676383-m6tivnrf7qrtekquf6rpj65imrvn3ni3.apps.googleusercontent.com</string>
+
+    <string name="title_item_details">Review Item</string>
+    <string name="content_description_product_thumbnail">Detected product thumbnail</string>
+    <string name="hint_product_name">Product name</string>
+    <string name="label_confidence">Confidence</string>
+    <string name="label_quantity">Quantity</string>
+    <string name="action_add_another_item">Add Another Item to Pantry</string>
+    <string name="action_save_finish">Save and Finish</string>
+    <string name="content_description_confirm_product">Confirm detected product</string>
+    <string name="error_product_name_required">Product name is required</string>
+    <string name="dialog_confirm_product_title">Confirm Product</string>
+    <string name="dialog_confirm_product_message">Do you want to add %1$s to your pantry?</string>
+    <string name="dialog_confirm_positive">✅ CONFIRM</string>
+    <string name="dialog_confirm_negative">❌ REJECT</string>
+    <string name="toast_item_added">%1$s added to pantry</string>
+    <string name="toast_item_added_background">%1$s saved (Total: %2$d items in background)</string>
+    <string name="toast_items_added">%1$d items added to pantry</string>
+    <string name="title_review_saved_items">Review Saved Items</string>
+    <string name="button_publish_pantry">Publish Pantry</string>
+    <string name="button_disassemble_pantry">Disassemble Pantry</string>
+    <string name="message_no_items_saved">No items saved yet</string>
+    <string name="message_no_items_to_publish">No items to publish</string>
+    <string name="message_no_items_to_remove">No items to remove</string>
+    <string name="toast_published_items">✓ Published %1$d item(s) to pantry!</string>
+    <string name="toast_items_removed">All items removed from pantry</string>
+    <string name="button_proceed_manually">Item isn\'t detected? Proceed Manually</string>
+    <string name="dialog_item_not_detected_title">Item Not Detected</string>
+    <string name="dialog_item_not_detected_message">Item isn\'t detected. Do you want to proceed manually?</string>
+
+	<!-- New form strings -->
+	<string name="title_publish_form">Publish Pantry</string>
+	<string name="label_pantry_name">Pantry name</string>
+	<string name="hint_pantry_name">Enter pantry name</string>
+	<string name="label_address">Address</string>
+	<string name="hint_address">Type full address</string>
+	<string name="label_start_date">Start date</string>
+	<string name="label_end_date">End date</string>
+	<string name="hint_pick_date">Pick a date</string>
+	<string name="action_confirm_publish">Confirm and Publish</string>
+	<string name="action_reject">Reject</string>
+	<string name="error_required">Required</string>
+	<string name="toast_pantry_published">Pantry published</string>
 </resources>
