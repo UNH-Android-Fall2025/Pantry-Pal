@@ -37,6 +37,7 @@
         </activity>
 
         <!-- Authentication Activities -->
+        <activity android:name=".WelcomeActivity" />
         <activity android:name=".LoginActivity" />
         <activity android:name=".SimpleLoginActivity" />
         <activity android:name=".SignUpActivity" />

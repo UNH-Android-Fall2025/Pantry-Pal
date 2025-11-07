@@ -24,9 +24,12 @@ class SimpleLoginActivity : AppCompatActivity() {
     private lateinit var etPassword: android.widget.EditText
     private lateinit var btnLogin: android.widget.Button
     private lateinit var btnGoogleSignIn: android.widget.LinearLayout
+    private lateinit var btnFacebookSignIn: android.widget.LinearLayout
+    private lateinit var btnTogglePassword: android.widget.ImageButton
     private lateinit var tvForgotPassword: android.widget.TextView
     private lateinit var tvSignUp: android.widget.TextView
     private lateinit var tvUseDifferentEmail: android.widget.TextView
+    private var isPasswordVisible = false
     
     private lateinit var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient
     private lateinit var executor: Executor
@@ -79,14 +82,16 @@ class SimpleLoginActivity : AppCompatActivity() {
             etPassword = findViewById(R.id.etPassword)
             btnLogin = findViewById(R.id.btnLogin)
             btnGoogleSignIn = findViewById(R.id.btnGoogleSignIn)
+            btnFacebookSignIn = findViewById(R.id.btnFacebookSignIn)
+            btnTogglePassword = findViewById(R.id.btnTogglePassword)
             tvForgotPassword = findViewById(R.id.tvForgotPassword)
             tvSignUp = findViewById(R.id.tvSignUp)
             tvUseDifferentEmail = findViewById(R.id.tvUseDifferentEmail)
             
             // Check if all views are found
             if (etEmail == null || etPassword == null || btnLogin == null || 
-                btnGoogleSignIn == null || tvForgotPassword == null || tvSignUp == null ||
-                tvUseDifferentEmail == null) {
+                btnGoogleSignIn == null || btnFacebookSignIn == null || btnTogglePassword == null ||
+                tvForgotPassword == null || tvSignUp == null || tvUseDifferentEmail == null) {
                 Toast.makeText(this, "Login screen setup failed", Toast.LENGTH_SHORT).show()
                 finish()
                 return
@@ -94,6 +99,9 @@ class SimpleLoginActivity : AppCompatActivity() {
             
             // Setup Google Sign-In
             setupGoogleSignIn()
+            
+            // Setup password visibility toggle
+            setupPasswordToggle()
             
             // Setup click listeners
             setupClickListeners()
@@ -192,6 +200,27 @@ class SimpleLoginActivity : AppCompatActivity() {
         }
     }
     
+    private fun setupPasswordToggle() {
+        btnTogglePassword.setOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+            
+            val selection = etPassword.selectionEnd
+            
+            if (isPasswordVisible) {
+                // Show password
+                etPassword.inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                btnTogglePassword.setImageResource(R.drawable.ic_visibility_off)
+            } else {
+                // Hide password
+                etPassword.inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+                btnTogglePassword.setImageResource(R.drawable.ic_visibility)
+            }
+            
+            // Restore cursor position
+            etPassword.setSelection(selection)
+        }
+    }
+    
     private fun setupClickListeners() {
         btnLogin.setOnClickListener {
             val email = if (rememberedEmail.isNotEmpty()) rememberedEmail else etEmail.text.toString().trim()
@@ -208,12 +237,17 @@ class SimpleLoginActivity : AppCompatActivity() {
             startActivity(Intent(this, SignUpActivity::class.java))
         }
         
+        btnFacebookSignIn.setOnClickListener {
+            // Facebook sign-in functionality - placeholder for now
+            Toast.makeText(this, "Facebook sign-in coming soon!", Toast.LENGTH_SHORT).show()
+        }
+        
         tvUseDifferentEmail.setOnClickListener {
             // Reset to allow email editing
             etEmail.isEnabled = true
             etEmail.alpha = 1.0f
             etEmail.setText("")
-            etEmail.hint = "Email"
+            etEmail.hint = "Enter your email"
             etEmail.requestFocus()
             tvUseDifferentEmail.visibility = View.GONE
             rememberedEmail = ""
@@ -314,7 +348,8 @@ class SimpleLoginActivity : AppCompatActivity() {
             
             // Show "Use Different Email" option
             tvUseDifferentEmail.visibility = View.VISIBLE
-            
+        } else {
+            etEmail.hint = "Enter your email"
         }
     }
 

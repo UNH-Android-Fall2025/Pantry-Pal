@@ -19,8 +19,8 @@ class MainActivity : ComponentActivity() {
 
         // Check if user is logged in
         if (currentUser == null) {
-            // Not logged in - go to LoginActivity
-            startActivity(Intent(this, LoginActivity::class.java))
+            // Not logged in - go to WelcomeActivity
+            startActivity(Intent(this, WelcomeActivity::class.java))
             finish()
         } else {
             // Logged in - save user info and proceed
