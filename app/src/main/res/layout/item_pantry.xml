@@ -4,97 +4,79 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
+    android:layout_marginHorizontal="24dp"
+    android:layout_marginVertical="8dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
-    app:cardBackgroundColor="@android:color/white">
+    app:cardBackgroundColor="#F6F8F7">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
-        <!-- Pantry Icon -->
-        <ImageView
-            android:id="@+id/ivPantryImage"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:src="@android:drawable/ic_dialog_info"
-            android:background="@android:color/holo_blue_light"
-            android:scaleType="centerInside"
-            android:layout_marginEnd="16dp" />
+        <!-- Icon Container -->
+        <LinearLayout
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="#4CAF50"
+            android:backgroundTint="#4CAF50"
+            android:alpha="0.1"
+            android:padding="16dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ivPantryIcon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_bakery_dining"
+                android:tint="#4CAF50"
+                android:contentDescription="Pantry icon" />
+
+        </LinearLayout>
 
         <!-- Main Content -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:gravity="center_vertical">
 
             <TextView
                 android:id="@+id/tvPantryName"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Community Food Pantry"
-                android:textSize="18sp"
+                android:text="Community Bread Basket"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/black" />
+                android:textColor="#121212"
+                android:layout_marginBottom="4dp" />
 
             <TextView
-                android:id="@+id/tvPantryDescription"
-                android:layout_width="match_parent"
+                android:id="@+id/tvPantryLocation"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Fresh produce, canned goods, bread"
+                android:text="123 Main Street, Anytown"
                 android:textSize="14sp"
-                android:textColor="@android:color/darker_gray"
-                android:layout_marginTop="4dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@android:drawable/ic_dialog_map"
-                    android:layout_marginEnd="4dp" />
-
-                <TextView
-                    android:id="@+id/tvPantryLocation"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="123 Main St, West Haven, CT"
-                    android:textSize="12sp"
-                    android:textColor="@android:color/holo_blue_dark" />
-
-                <TextView
-                    android:id="@+id/tvDistance"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0.5 mi"
-                    android:textSize="12sp"
-                    android:textColor="@android:color/darker_gray"
-                    android:layout_marginStart="8dp" />
-
-            </LinearLayout>
+                android:textColor="#757575" />
 
         </LinearLayout>
 
-        <!-- Map Button -->
-        <ImageButton
-            android:id="@+id/btnMapIcon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@android:drawable/ic_dialog_map"
-            android:background="@android:drawable/btn_default"
-            android:scaleType="centerInside"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="View on Map" />
+        <!-- Distance -->
+        <TextView
+            android:id="@+id/tvDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0.5 mi"
+            android:textSize="14sp"
+            android:textStyle="normal"
+            android:textColor="#757575"
+            android:layout_marginStart="8dp"
+            android:gravity="center_vertical" />
 
     </LinearLayout>
 
