@@ -79,8 +79,10 @@ class HomePageActivity : AppCompatActivity() {
             Toast.makeText(this, "🍳 Recipes page coming soon!", Toast.LENGTH_SHORT).show()
         }
 
+        // ✅ Updated: Open Cart Page instead of showing toast
         binding.btnCart.setOnClickListener {
-            Toast.makeText(this, "🛒 Cart feature coming soon!", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, CartActivity::class.java)
+            startActivity(intent)
         }
 
         binding.bottomNavigation.bringToFront()

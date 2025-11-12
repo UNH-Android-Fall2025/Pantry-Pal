@@ -4,15 +4,19 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt") // ✅ Added for Glide annotation processor
     id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.unh.pantrypalonevo"
     compileSdk = 36
+
     buildFeatures {
         viewBinding = true
+        compose = true
     }
+
     defaultConfig {
         applicationId = "com.unh.pantrypalonevo"
         minSdk = 33
@@ -32,16 +36,16 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
-    buildFeatures {
-        compose = true
-    }
+
     lint {
         baseline = file("lint-baseline.xml")
     }
@@ -49,6 +53,7 @@ android {
 
 dependencies {
 
+    // Core Android + Jetpack
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -65,29 +70,35 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // UI Components
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.biometric:biometric:1.2.0-alpha04")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("com.google.android.material:material:1.10.0")
+
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.3.0"))
-
-    // Firebase Authentication
     implementation("com.google.firebase:firebase-auth")
-
-    // Cloud Firestore
     implementation("com.google.firebase:firebase-firestore")
 
-    // Biometric authentication
-    implementation("androidx.biometric:biometric:1.2.0-alpha05")
+    // Google Play Services
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
 
-    // CORRECT - Kotlin syntax
+    // Biometric
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
+
+    // CameraX
     val cameraxVersion = "1.3.0"
     implementation("androidx.camera:camera-camera2:$cameraxVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
     implementation("androidx.camera:camera-view:$cameraxVersion")
+
+    // ML Kit (Image Labeling)
     implementation("com.google.mlkit:image-labeling:17.0.8")
 
+    // 🧠 Glide for image loading (Cart Page)
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    kapt("com.github.bumptech.glide:compiler:4.16.0")
 }

@@ -2,15 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Add biometric permission -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
-    
-    <!-- Camera permissions for take photo feature -->
     <uses-permission android:name="android.permission.CAMERA" />
+
     <uses-feature android:name="android.hardware.camera" android:required="true" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
@@ -25,7 +23,6 @@
         android:theme="@style/Theme.PantryPal"
         tools:targetApi="31">
 
-        <!-- SplashActivity is the launcher - shows splash screen first -->
         <activity
             android:name=".SplashActivity"
             android:exported="true"
@@ -36,44 +33,16 @@
             </intent-filter>
         </activity>
 
-        <!-- MainActivity - checks auth status -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-
-        <!-- SimpleLoginActivity - Main login -->
-        <activity
-            android:name=".SimpleLoginActivity"
-            android:exported="false"
-            android:theme="@style/Theme.PantryPal.NoActionBar" />
-
-        <!-- Add other activities -->
-        <activity
-            android:name=".SignUpActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ForgotPasswordActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".HomePageActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".FingerprintActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ConfirmProductsActivity"
-            android:exported="false" />
-
-        <activity android:name=".PublishPantryActivity" android:exported="false"/>
-
-        <activity android:name=".AccountSettingsActivity" android:exported="false"/>
-
+        <activity android:name=".MainActivity" android:exported="false" />
+        <activity android:name=".SimpleLoginActivity" android:exported="false" android:theme="@style/Theme.PantryPal.NoActionBar" />
+        <activity android:name=".SignUpActivity" android:exported="false" />
+        <activity android:name=".ForgotPasswordActivity" android:exported="false" />
+        <activity android:name=".HomePageActivity" android:exported="false" />
+        <activity android:name=".ProfileActivity" android:exported="false" />
+        <activity android:name=".FingerprintActivity" android:exported="false" />
+        <activity android:name=".ConfirmProductsActivity" android:exported="false" />
+        <activity android:name=".PublishPantryActivity" android:exported="false" />
+        <activity android:name=".AccountSettingsActivity" android:exported="false" />
+        <activity android:name=".CartActivity" android:exported="false" android:label="Cart" />
     </application>
-
 </manifest>
