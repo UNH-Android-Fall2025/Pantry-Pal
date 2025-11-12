@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.unh.pantrypalonevo"
-    compileSdk = 36
+    compileSdk = 36  // Required by dependencies (core-ktx 1.17.0), but targetSdk remains 33
 
     buildFeatures {
         viewBinding = true
@@ -30,7 +30,7 @@ android {
     defaultConfig {
         applicationId = "com.unh.pantrypalonevo"
         minSdk = 33
-        targetSdk = 36
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
 

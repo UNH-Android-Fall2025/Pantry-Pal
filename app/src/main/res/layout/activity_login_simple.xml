@@ -166,7 +166,7 @@
                 android:padding="4dp" />
 
             <!-- Log In Button -->
-            <androidx.appcompat.widget.AppCompatButton
+            <Button
                 android:id="@+id/btnLogin"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
@@ -174,8 +174,7 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/white"
-                android:background="@drawable/rounded_button_bg"
-                android:backgroundTint="#4CAF50"
+                android:background="@drawable/rounded_button_green"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="32dp" />
 
