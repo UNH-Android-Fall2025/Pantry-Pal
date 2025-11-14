@@ -300,9 +300,9 @@
 
         </LinearLayout>
 
-        <!-- Pantry Button -->
+        <!-- Recipes Button -->
         <LinearLayout
-            android:id="@+id/btnPantry"
+            android:id="@+id/btnRecipes"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -316,15 +316,15 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_kitchen"
+                android:src="@drawable/ic_menu_book"
                 android:tint="#757575"
                 android:layout_marginBottom="4dp"
-                android:contentDescription="Pantry" />
+                android:contentDescription="Recipes" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Pantry"
+                android:text="Recipes"
                 android:textSize="12sp"
                 android:textStyle="normal"
                 android:textColor="#757575"
@@ -366,9 +366,9 @@
 
         </FrameLayout>
 
-        <!-- Recipes Button -->
+        <!-- Cart Button (was Pantry) -->
         <LinearLayout
-            android:id="@+id/btnRecipes"
+            android:id="@+id/btnPantry"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -382,15 +382,15 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_pan"
+                android:src="@drawable/ic_cart"
                 android:tint="#757575"
                 android:layout_marginBottom="4dp"
-                android:contentDescription="Recipes" />
+                android:contentDescription="Cart" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Recipes"
+                android:text="Cart"
                 android:textSize="12sp"
                 android:textStyle="normal"
                 android:textColor="#757575"
