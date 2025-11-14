@@ -55,7 +55,32 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnProceedManually"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="@string/button_proceed_manually"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/tvDetectionStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerDetectedProducts"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/tvDetectionStatus"
+        app:layout_constraintBottom_toTopOf="@id/containerActions"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <LinearLayout
+        android:id="@+id/containerActions"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"

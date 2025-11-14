@@ -190,10 +190,11 @@ class SplashActivity : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             val intent = Intent(this, SimpleLoginActivity::class.java)
             startActivity(intent)
-        finish()
+            finish()
         }, SPLASH_DELAY)
     }
     
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         // Disable back button during splash
         // Do nothing

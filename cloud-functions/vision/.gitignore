@@ -1,0 +1,5 @@
+# Ignore service-account keys or other secrets placed in this folder
+*.json
+*.pem
+*.p12
+

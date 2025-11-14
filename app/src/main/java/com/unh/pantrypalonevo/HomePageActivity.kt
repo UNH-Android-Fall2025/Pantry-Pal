@@ -28,16 +28,23 @@ class HomePageActivity : AppCompatActivity() {
         binding = ActivityHomePageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // ✅ Load logged-in user's username
         val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
         val username = prefs.getString("user_username", null)
         val displayName = prefs.getString("user_name", "User")
+        
+        // Use username if available, otherwise fallback to display name
+        val greetingName = if (!username.isNullOrBlank()) {
+            username
+        } else {
+            displayName
+        }
+        
+        binding.tvGreeting.text = "Hello, $greetingName!"
 
-        val greetingName = if (!username.isNullOrBlank()) username else displayName
-
-        binding.tvGreeting.text = "Hello $greetingName !!"
-        binding.tvSubtitle.text = "Free Pantry near you"
-
+        // ✅ RecyclerView setup
         pantryAdapter = PantryAdapter(pantryList) { pantry ->
+            // On click → open PantryLocationActivity (details)
             val intent = Intent(this, PantryLocationActivity::class.java)
             intent.putExtra("pantry_name", pantry.name)
             intent.putExtra("pantry_address", pantry.address)
@@ -47,13 +54,18 @@ class HomePageActivity : AppCompatActivity() {
         binding.rvPantryList.layoutManager = LinearLayoutManager(this)
         binding.rvPantryList.adapter = pantryAdapter
 
+        // ✅ Fused location client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        // ✅ Load sample pantries (replace with Firestore later)
         loadSamplePantries()
 
-        binding.ivLocationButton.setOnClickListener {
+        // ✅ Handle location enable card
+        binding.btnEnableLocation.setOnClickListener {
             requestLocationPermissionAndFetch()
         }
 
+        // ✅ Search filter
         binding.btnSearch.setOnClickListener {
             val query = binding.etSearch.text.toString().trim()
             if (query.isEmpty()) {
@@ -61,67 +73,73 @@ class HomePageActivity : AppCompatActivity() {
             } else {
                 val filtered = pantryList.filter {
                     it.name.contains(query, ignoreCase = true) ||
-                            it.address.contains(query, ignoreCase = true)
+                            it.address.contains(query, ignoreCase = true) ||
+                            it.description.contains(query, ignoreCase = true)
                 }
                 pantryAdapter.updateList(filtered)
             }
         }
 
+        // ✅ Bottom navigation wiring
         binding.btnHome.setOnClickListener {
-            if (pantryList.isNotEmpty()) binding.rvPantryList.smoothScrollToPosition(0)
+            // already on Home — scroll to top as a UX nicety
+            binding.scrollView.smoothScrollTo(0, 0)
         }
-
+        binding.btnPantry.setOnClickListener {
+            // Navigate to PublishPantryActivity
+            startActivity(Intent(this, PublishPantryActivity::class.java))
+        }
+        binding.btnAdd.setOnClickListener {
+            // Navigate to PublishPantryActivity (add new pantry)
+            startActivity(Intent(this, PublishPantryActivity::class.java))
+        }
+        binding.btnRecipes.setOnClickListener {
+            // Navigate to Recipes page (or show toast for now)
+            Toast.makeText(this, "Recipes page coming soon!", Toast.LENGTH_SHORT).show()
+        }
         binding.btnProfile.setOnClickListener {
+            // open your profile screen
             startActivity(Intent(this, ProfileActivity::class.java))
         }
 
-        binding.btnRecipes.setOnClickListener {
-            Toast.makeText(this, "🍳 Recipes page coming soon!", Toast.LENGTH_SHORT).show()
-        }
+        // ✅ Launch Pantry Detector (for testing object detection)
+        // You can add a button in the layout or use this as a quick test entry point
+        // For now, you can launch it via ADB: adb shell am start -n com.unh.pantrypalonevo/.PantryDetectorActivity
 
-        // ✅ Updated: Open Cart Page instead of showing toast
-        binding.btnCart.setOnClickListener {
-            val intent = Intent(this, CartActivity::class.java)
-            startActivity(intent)
-        }
-
+        // Ensure bottom bar always receives taps (avoid overlap from list)
         binding.bottomNavigation.bringToFront()
         binding.bottomNavigation.isClickable = true
     }
 
+    // === SAMPLE PANTRIES (you can replace with real Firestore later) ===
     private fun loadSamplePantries() {
         pantryList.clear()
         pantryList.addAll(
             listOf(
                 Pantry(
-                    name = "West Haven Food Bank",
+                    name = "Community Bread Basket",
                     description = "Fresh produce, canned goods, bread",
-                    address = "123 Main St, West Haven, CT",
-                    distance = "1.5 mi"
+                    address = "123 Main Street, Anytown",
+                    distance = "0.5 mi"
                 ),
                 Pantry(
-                    name = "Community Pantry",
+                    name = "Hopewell Food Bank",
                     description = "Family-friendly pantry with clothing",
-                    address = "456 Oak Ave, New Haven, CT",
-                    distance = "1.9 mi"
+                    address = "456 Oak Avenue, Anytown",
+                    distance = "1.2 mi"
                 ),
                 Pantry(
-                    name = "Faith Community Kitchen",
+                    name = "Neighbor's Fridge",
                     description = "Hot meals served Mon-Fri",
-                    address = "789 Church St, Milford, CT",
-                    distance = "0.8 mi"
-                ),
-                Pantry(
-                    name = "Neighborhood Support",
-                    description = "Emergency food assistance",
-                    address = "321 Elm St, West Haven, CT",
-                    distance = "1.7 mi"
+                    address = "789 Pine Lane, Anytown",
+                    distance = "2.1 mi"
                 )
             )
         )
         pantryAdapter.notifyDataSetChanged()
     }
 
+    // === LOCATION PERMISSION & FETCH ===
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) fetchUserLocation()
@@ -146,9 +164,10 @@ class HomePageActivity : AppCompatActivity() {
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location: Location? ->
                 if (location != null) {
-                    binding.tvCurrentLocation.text =
-                        "Lat: %.4f, Lng: %.4f".format(location.latitude, location.longitude)
-                    Toast.makeText(this, "Location updated", Toast.LENGTH_SHORT).show()
+                    // Update location enable card to show success
+                    binding.locationEnableCard.alpha = 0.7f
+                    Toast.makeText(this, "Location enabled successfully", Toast.LENGTH_SHORT).show()
+                    // You can update the card text here if needed
                 } else {
                     Toast.makeText(this, "Unable to get location", Toast.LENGTH_SHORT).show()
                 }

@@ -6,6 +6,7 @@ import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.unh.pantrypalonevo.R
 import com.unh.pantrypalonevo.databinding.ItemPantryBinding
 import com.unh.pantrypalonevo.model.Pantry
 
@@ -26,32 +27,20 @@ class PantryAdapter(
         val item = items[position]
         with(holder.binding) {
             tvPantryName.text = item.name
-            tvPantryDescription.text = item.description
-            tvPantryLocation.text = item.address   // matches your XML
-            tvDistance.text = item.distance        // matches your XML
+            tvPantryLocation.text = item.address
+            tvDistance.text = item.distance
 
-            // Tap the whole card -> (optional) open details
-            root.setOnClickListener { onItemClick?.invoke(item) }
-
-            // Tap the map icon -> open Google Maps to the pantry address
-            btnMapIcon.setOnClickListener {
-                val ctx = it.context
-                val query = Uri.encode(item.address.ifBlank { item.name })
-                val gmmIntentUri = Uri.parse("geo:0,0?q=$query")
-
-                val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
-                    // Prefer Google Maps app if present
-                    setPackage("com.google.android.apps.maps")
-                }
-
-                try {
-                    ctx.startActivity(mapIntent)
-                } catch (_: ActivityNotFoundException) {
-                    // Fallback to browser if Maps app not installed
-                    val web = Uri.parse("https://www.google.com/maps/search/?api=1&query=$query")
-                    ctx.startActivity(Intent(Intent.ACTION_VIEW, web))
-                }
+            // Set icon based on pantry name or use default
+            val iconRes = when {
+                item.name.contains("Bread", ignoreCase = true) -> R.drawable.ic_bakery_dining
+                item.name.contains("Food Bank", ignoreCase = true) -> R.drawable.ic_food_bank
+                item.name.contains("Store", ignoreCase = true) -> R.drawable.ic_local_convenience_store
+                else -> R.drawable.ic_bakery_dining // default icon
             }
+            ivPantryIcon.setImageResource(iconRes)
+
+            // Tap the whole card -> open details
+            root.setOnClickListener { onItemClick?.invoke(item) }
         }
     }
 

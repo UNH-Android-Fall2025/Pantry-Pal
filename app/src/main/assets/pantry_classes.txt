@@ -1,0 +1,25 @@
+banana
+apple
+sandwich
+orange
+broccoli
+carrot
+hot dog
+pizza
+donut
+cake
+bottle
+wine glass
+cup
+fork
+knife
+spoon
+bowl
+backpack
+book
+cell phone
+refrigerator
+microwave
+oven
+toaster
+sink

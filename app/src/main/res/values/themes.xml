@@ -20,4 +20,18 @@
     <style name="Theme.PantryPal.NoActionBar" parent="Theme.PantryPal">
         <item name="android:windowFullscreen">false</item>
     </style>
+
+    <!-- Theme alias for PantryPaloneVo (matches Theme.PantryPal) -->
+    <style name="Theme.PantryPaloneVo" parent="Theme.PantryPal">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@android:color/holo_blue_dark</item>
+        <item name="colorPrimaryVariant">@android:color/holo_blue_light</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSecondary">@android:color/holo_blue_light</item>
+        <item name="colorSecondaryVariant">@android:color/holo_blue_bright</item>
+        <item name="colorOnSecondary">@android:color/black</item>
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
 </resources>
