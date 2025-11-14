@@ -85,17 +85,17 @@ class HomePageActivity : AppCompatActivity() {
             // already on Home — scroll to top as a UX nicety
             binding.scrollView.smoothScrollTo(0, 0)
         }
-        binding.btnPantry.setOnClickListener {
-            // Navigate to PublishPantryActivity
-            startActivity(Intent(this, PublishPantryActivity::class.java))
+        binding.btnRecipes.setOnClickListener {
+            // Navigate to Recipes page (or show toast for now)
+            Toast.makeText(this, "Recipes page coming soon!", Toast.LENGTH_SHORT).show()
         }
         binding.btnAdd.setOnClickListener {
             // Navigate to PublishPantryActivity (add new pantry)
             startActivity(Intent(this, PublishPantryActivity::class.java))
         }
-        binding.btnRecipes.setOnClickListener {
-            // Navigate to Recipes page (or show toast for now)
-            Toast.makeText(this, "Recipes page coming soon!", Toast.LENGTH_SHORT).show()
+        binding.btnPantry.setOnClickListener {
+            // Navigate to Cart (repointed from Pantry)
+            Toast.makeText(this, "Cart page coming soon!", Toast.LENGTH_SHORT).show()
         }
         binding.btnProfile.setOnClickListener {
             // open your profile screen

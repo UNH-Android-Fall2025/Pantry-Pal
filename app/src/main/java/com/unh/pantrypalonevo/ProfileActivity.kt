@@ -25,20 +25,9 @@ class ProfileActivity : AppCompatActivity() {
         
         db = FirebaseFirestore.getInstance()
 
-        // ✅ Fix: ensure bottom bar doesn’t block clicks
+        // Ensure bottom bar doesn't block clicks
         binding.bottomNavigation.bringToFront()
         binding.bottomNavigation.isClickable = true
-
-        // Add safe padding so bottom buttons remain clickable
-        binding.root.post {
-            val navHeight = binding.bottomNavigation.height.coerceAtLeast(100)
-            binding.root.setPadding(
-                binding.root.paddingLeft,
-                binding.root.paddingTop,
-                binding.root.paddingRight,
-                navHeight
-            )
-        }
 
         setupClickListeners()
         loadDynamicUserProfile()
@@ -69,6 +58,19 @@ class ProfileActivity : AppCompatActivity() {
         binding.tvUserName.text = displayText
         binding.tvPhoneNumber.text =
             savedEmail ?: FirebaseAuth.getInstance().currentUser?.email ?: "No email available"
+        
+        // Set user initials in avatar
+        val initials = getInitials(displayText)
+        binding.tvUserInitials.text = initials
+    }
+    
+    private fun getInitials(name: String): String {
+        val parts = name.trim().split(" ").filter { it.isNotBlank() }
+        return when {
+            parts.isEmpty() -> "U"
+            parts.size == 1 -> parts[0].take(2).uppercase()
+            else -> "${parts[0].first()}${parts.last().first()}".uppercase()
+        }
     }
 
     private fun extractUsernameFromEmail(email: String): String {
@@ -84,7 +86,10 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        binding.btnSettings.setOnClickListener { showSettingsOptions() }
+        // Edit avatar button - same as edit profile
+        binding.btnEditAvatar.setOnClickListener {
+            showEditUsernameDialog()
+        }
 
         binding.btnPantryCode.setOnClickListener { showPantryCodeDialog() }
 
@@ -123,24 +128,6 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun showSettingsOptions() {
-        val options =
-            arrayOf("Account Settings", "Privacy Settings", "Notifications", "Help & Support")
-        AlertDialog.Builder(this)
-            .setTitle("Settings")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> {
-                        // Navigate to Account Settings
-                        startActivity(Intent(this, AccountSettingsActivity::class.java))
-                    }
-                    1 -> Toast.makeText(this, "Privacy Settings - Coming Soon!", Toast.LENGTH_SHORT).show()
-                    2 -> Toast.makeText(this, "Notifications - Coming Soon!", Toast.LENGTH_SHORT).show()
-                    else -> Toast.makeText(this, "Help & Support - Coming Soon!", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .show()
-    }
 
     private fun showLogoutDialog() {
         AlertDialog.Builder(this)
