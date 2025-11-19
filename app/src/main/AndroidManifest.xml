@@ -49,6 +49,7 @@
         <activity android:name=".ProfileActivity" />
         <activity android:name=".AccountSettingsActivity" />
         <activity android:name=".SplashActivity" />
+        <activity android:name=".CartActivity" />
 
         <!-- Pantry Related Activities -->
         <activity android:name=".PublishPantryActivity" />

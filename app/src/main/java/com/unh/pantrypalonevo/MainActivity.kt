@@ -16,11 +16,18 @@ class MainActivity : ComponentActivity() {
 
         val auth = FirebaseAuth.getInstance()
         val currentUser = auth.currentUser
+        val userPrefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+        val hasLoggedInBefore = userPrefs.getBoolean("has_logged_in_before", false)
 
         // Check if user is logged in
         if (currentUser == null) {
-            // Not logged in - go to WelcomeActivity
-            startActivity(Intent(this, WelcomeActivity::class.java))
+            // Not logged in - go to WelcomeActivity for first-time users, otherwise to login
+            val next = if (hasLoggedInBefore)
+                SimpleLoginActivity::class.java
+            else
+                WelcomeActivity::class.java
+
+            startActivity(Intent(this, next))
             finish()
         } else {
             // Logged in - save user info and proceed
@@ -28,8 +35,7 @@ class MainActivity : ComponentActivity() {
             val userName = currentUser.displayName ?: userEmail.substringBefore("@")
 
             // Save to SharedPreferences
-            val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
-            sharedPref.edit()
+            userPrefs.edit()
                 .putString("user_email", userEmail)
                 .putString("user_name", userName)
                 .apply()
@@ -47,7 +53,6 @@ class MainActivity : ComponentActivity() {
                     prefs.edit().putBoolean("fingerprint_enabled", fingerprintEnabled).apply()
 
                     // Save username
-                    val userPrefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
                     userPrefs.edit()
                         .putString("user_username", username)
                         .putString("user_name", username)

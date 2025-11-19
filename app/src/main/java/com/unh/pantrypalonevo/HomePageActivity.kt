@@ -94,8 +94,8 @@ class HomePageActivity : AppCompatActivity() {
             startActivity(Intent(this, PublishPantryActivity::class.java))
         }
         binding.btnPantry.setOnClickListener {
-            // Navigate to Cart (repointed from Pantry)
-            Toast.makeText(this, "Cart page coming soon!", Toast.LENGTH_SHORT).show()
+            // Navigate to Cart
+            startActivity(Intent(this, CartActivity::class.java))
         }
         binding.btnProfile.setOnClickListener {
             // open your profile screen
