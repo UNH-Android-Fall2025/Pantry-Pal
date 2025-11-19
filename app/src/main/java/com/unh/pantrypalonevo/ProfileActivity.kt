@@ -124,7 +124,8 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         binding.btnCart.setOnClickListener {
-            Toast.makeText(this, "Cart - Coming Soon!", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, CartActivity::class.java))
+            finish()
         }
     }
 

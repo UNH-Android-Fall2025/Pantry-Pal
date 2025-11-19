@@ -36,6 +36,8 @@ class PublishPantryActivity : AppCompatActivity() {
     private lateinit var detectedProductAdapter: DetectedProductAdapter
     private val confirmedProducts = mutableListOf<DetectedProduct>()
     private var pendingProduct: DetectedProduct? = null
+    private val pendingSelectedProducts = mutableListOf<DetectedProduct>()
+    private val productImageUriMap = mutableMapOf<String, String>()
 
     // Gallery launcher
     private val pickImageLauncher = registerForActivityResult(
@@ -47,6 +49,7 @@ class PublishPantryActivity : AppCompatActivity() {
                 capturedImageBitmap = bitmap
                 capturedImageUri = it
                 binding.ivPreview.setImageBitmap(bitmap)
+                updateImagePreviewVisibility()
                 clearDetectedProducts()
                 detectProducts(bitmap)
             } catch (e: Exception) {
@@ -65,16 +68,56 @@ class PublishPantryActivity : AppCompatActivity() {
             val addAnother = data?.getBooleanExtra(ItemDetailsActivity.EXTRA_ADD_ANOTHER, false) ?: false
 
             confirmedItem?.let { product ->
-                // Always save the product to confirmedProducts list (background)
-                addConfirmedProduct(product)
-                
+                // Update existing product in place if we have a pendingProduct (to prevent duplicates)
                 pendingProduct?.let { pending ->
+                    // Find the existing product in confirmedProducts by the original name
+                    val existingIndex = confirmedProducts.indexOfFirst { 
+                        it.name.equals(pending.name, ignoreCase = true) 
+                    }
+                    
+                    if (existingIndex >= 0) {
+                        // Update existing product in place (handles name changes)
+                        val existing = confirmedProducts[existingIndex]
+                        confirmedProducts[existingIndex] = product.copy(
+                            quantity = if (addAnother) existing.quantity + product.quantity else product.quantity
+                        )
+                        
+                        // Update image URI map - remove old name, add new name
+                        productImageUriMap.remove(pending.name)
+                        capturedImageUri?.toString()?.let { uriString ->
+                            productImageUriMap[product.name] = uriString
+                        }
+                    } else {
+                        // Product not found, add it (shouldn't happen normally)
+                        addConfirmedProduct(product)
+                        capturedImageUri?.toString()?.let { uriString ->
+                            productImageUriMap[product.name] = uriString
+                        }
+                    }
+                    
                     // Mark the product as approved in the adapter instead of removing
                     detectedProductAdapter.markProductAsApproved(pending)
                     // Also update the list
                     val index = detectedProducts.indexOf(pending)
                     if (index != -1) {
                         detectedProducts[index] = pending.copy(approved = true)
+                    }
+                } ?: run {
+                    // No pending product (shouldn't happen in normal flow, but handle gracefully)
+                    addConfirmedProduct(product)
+                    capturedImageUri?.toString()?.let { uriString ->
+                        productImageUriMap[product.name] = uriString
+                    }
+                }
+                
+                // Remove processed item from pendingSelectedProducts queue
+                // Match by original pendingProduct name since product name might have changed
+                pendingProduct?.let { pending ->
+                    val indexToRemove = pendingSelectedProducts.indexOfFirst { 
+                        it.name.equals(pending.name, ignoreCase = true) 
+                    }
+                    if (indexToRemove >= 0) {
+                        pendingSelectedProducts.removeAt(indexToRemove)
                     }
                 }
                 
@@ -93,8 +136,14 @@ class PublishPantryActivity : AppCompatActivity() {
             }
 
             if (!addAnother) {
-                // Navigate to ReviewSavedItemsActivity when "Save and Finish" is clicked
-                navigateToReviewSavedItems()
+                // Check if there are more items in the pendingSelectedProducts queue
+                if (pendingSelectedProducts.isNotEmpty()) {
+                    // Process next item in queue
+                    navigateToItemDetails(pendingSelectedProducts[0])
+                } else {
+                    // All selected items processed, navigate to ReviewSavedItemsActivity
+                    navigateToReviewSavedItems()
+                }
             }
             
             // Clear pendingProduct after handling (whether addAnother is true or false)
@@ -112,6 +161,19 @@ class PublishPantryActivity : AppCompatActivity() {
         setupRecyclerView()
         clearDetectedProducts()
         setupClickListeners()
+        setupBackButton()
+        updateImagePreviewVisibility()
+        setupSquareImageContainer()
+    }
+    
+    private fun setupSquareImageContainer() {
+        binding.imageContainer.post {
+            val width = binding.imageContainer.width
+            if (width > 0) {
+                binding.imageContainer.layoutParams.height = width
+                binding.imageContainer.requestLayout()
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -128,6 +190,22 @@ class PublishPantryActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupBackButton() {
+        binding.btnBack.setOnClickListener {
+            finish()
+        }
+    }
+
+    private fun updateImagePreviewVisibility() {
+        if (capturedImageBitmap != null) {
+            binding.ivPreview.visibility = View.VISIBLE
+            binding.placeholderContent.visibility = View.GONE
+        } else {
+            binding.ivPreview.visibility = View.GONE
+            binding.placeholderContent.visibility = View.VISIBLE
+        }
+    }
+
     private fun setupRecyclerView() {
         detectedProductAdapter = DetectedProductAdapter(
             onProductConfirm = { product ->
@@ -136,6 +214,9 @@ class PublishPantryActivity : AppCompatActivity() {
             onProductReject = { product ->
                 // Just collapse the item, no action needed
                 // The adapter will handle hiding the buttons
+            },
+            onSelectionChanged = { selectedCount ->
+                updateContinueButton(selectedCount)
             }
         )
 
@@ -143,6 +224,33 @@ class PublishPantryActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@PublishPantryActivity)
             adapter = detectedProductAdapter
             setHasFixedSize(true)
+        }
+        
+        // Setup Continue button
+        binding.btnContinue.setOnClickListener {
+            handleContinueWithSelectedItems()
+        }
+    }
+    
+    private fun updateContinueButton(selectedCount: Int) {
+        binding.btnContinue.isEnabled = selectedCount > 0
+        binding.btnContinue.alpha = if (selectedCount > 0) 1f else 0.5f
+    }
+    
+    private fun handleContinueWithSelectedItems() {
+        val selectedProducts = detectedProductAdapter.getSelectedProducts()
+        if (selectedProducts.isEmpty()) {
+            Toast.makeText(this, "Please select at least one item", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        // Store all selected products to process sequentially
+        pendingSelectedProducts.clear()
+        pendingSelectedProducts.addAll(selectedProducts)
+        
+        // Process first selected item
+        if (pendingSelectedProducts.isNotEmpty()) {
+            navigateToItemDetails(pendingSelectedProducts[0])
         }
     }
 
@@ -156,8 +264,11 @@ class PublishPantryActivity : AppCompatActivity() {
     }
 
     private fun updateRecyclerVisibility() {
+        val hasProducts = detectedProducts.isNotEmpty()
         binding.recyclerDetectedProducts.visibility =
-            if (detectedProducts.isNotEmpty()) View.VISIBLE else View.GONE
+            if (hasProducts) View.VISIBLE else View.GONE
+        binding.btnContinue.visibility =
+            if (hasProducts) View.VISIBLE else View.GONE
     }
 
     private fun navigateToItemDetails(product: DetectedProduct) {
@@ -214,6 +325,12 @@ class PublishPantryActivity : AppCompatActivity() {
                 ReviewSavedItemsActivity.EXTRA_SAVED_ITEMS,
                 ArrayList(confirmedProducts)
             )
+            // Pass image URI map as bundle
+            val bundle = Bundle()
+            productImageUriMap.forEach { (key, value) ->
+                bundle.putString(key, value)
+            }
+            putExtra(ReviewSavedItemsActivity.EXTRA_IMAGE_URI_MAP, bundle)
         }
         startActivity(intent)
     }

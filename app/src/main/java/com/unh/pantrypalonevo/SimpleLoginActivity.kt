@@ -284,7 +284,10 @@ class SimpleLoginActivity : AppCompatActivity() {
     private fun saveUserEmailAndNavigate(email: String) {
         try {
             val sharedPref = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
-            sharedPref.edit().putString("user_email", email).apply()
+            sharedPref.edit()
+                .putString("user_email", email)
+                .putBoolean("has_logged_in_before", true)
+                .apply()
             
             // Check if user has a username, if not generate one
             val currentUser = FirebaseAuth.getInstance().currentUser

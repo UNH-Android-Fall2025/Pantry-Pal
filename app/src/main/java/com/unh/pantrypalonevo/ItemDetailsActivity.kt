@@ -5,6 +5,9 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.core.net.toUri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.unh.pantrypalonevo.databinding.ActivityItemDetailsBinding
 
@@ -19,16 +22,14 @@ class ItemDetailsActivity : AppCompatActivity() {
         binding = ActivityItemDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupToolbar()
+        setupBackButton()
         initializeFromIntent()
-        setupQuantityControls()
+        setupClearButton()
         setupActionButtons()
     }
 
-    private fun setupToolbar() {
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        binding.toolbar.setNavigationOnClickListener {
+    private fun setupBackButton() {
+        binding.btnBack.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
     }
@@ -36,17 +37,23 @@ class ItemDetailsActivity : AppCompatActivity() {
     private fun initializeFromIntent() {
         val productName = intent.getStringExtra(EXTRA_PRODUCT_NAME).orEmpty()
         confidence = intent.getFloatExtra(EXTRA_PRODUCT_CONFIDENCE, 0f)
-        val quantity = intent.getIntExtra(EXTRA_PRODUCT_QUANTITY, 1)
 
         binding.etProductName.setText(productName)
-        // Show "N/A" for manual entries (confidence = 0), otherwise show percentage
+        
+        // Show confidence chip - "N/A" for manual entries (confidence = 0), otherwise show percentage
         binding.tvConfidenceValue.text = if (confidence > 0f) {
-            "${(confidence * 100).toInt()}%"
+            "Confidence ${(confidence * 100).toInt()}%"
         } else {
-            "N/A"
+            "Confidence N/A"
         }
-        binding.tvQuantityValue.text = quantity.coerceAtLeast(1).toString()
 
+        // Load and display image
+        loadProductImage()
+    }
+
+    private fun loadProductImage() {
+        var imageLoaded = false
+        
         // Prefer loading from URI to avoid binder limits
         val imageUriString = intent.getStringExtra(EXTRA_PRODUCT_IMAGE_URI)
         if (!imageUriString.isNullOrEmpty()) {
@@ -55,19 +62,44 @@ class ItemDetailsActivity : AppCompatActivity() {
                 contentResolver.openInputStream(uri)?.use { stream ->
                     val bitmap = BitmapFactory.decodeStream(stream)
                     binding.ivProductThumbnail.setImageBitmap(bitmap)
+                    binding.ivProductThumbnail.visibility = View.VISIBLE
+                    binding.placeholderContent.visibility = View.GONE
+                    imageLoaded = true
                 }
             } catch (_: Exception) { /* fall back to byte[] */ }
-        } else {
+        }
+        
+        if (!imageLoaded) {
             intent.getByteArrayExtra(EXTRA_PRODUCT_IMAGE)?.let { bytes ->
                 val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                 binding.ivProductThumbnail.setImageBitmap(bitmap)
+                binding.ivProductThumbnail.visibility = View.VISIBLE
+                binding.placeholderContent.visibility = View.GONE
+                imageLoaded = true
             }
+        }
+        
+        if (!imageLoaded) {
+            // No image available, show placeholder
+            binding.ivProductThumbnail.visibility = View.GONE
+            binding.placeholderContent.visibility = View.VISIBLE
         }
     }
 
-    private fun setupQuantityControls() {
-        binding.btnQuantityMinus.setOnClickListener { adjustQuantity(-1) }
-        binding.btnQuantityPlus.setOnClickListener { adjustQuantity(1) }
+    private fun setupClearButton() {
+        // Show/hide clear button based on text content
+        binding.etProductName.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                binding.btnClearName.visibility = if (s?.isNotEmpty() == true) View.VISIBLE else View.GONE
+            }
+        })
+        
+        binding.btnClearName.setOnClickListener {
+            binding.etProductName.setText("")
+            binding.etProductName.requestFocus()
+        }
     }
 
     private fun setupActionButtons() {
@@ -84,22 +116,15 @@ class ItemDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun adjustQuantity(delta: Int) {
-        val current = binding.tvQuantityValue.text.toString().toIntOrNull() ?: 1
-        val updated = (current + delta).coerceAtLeast(1)
-        binding.tvQuantityValue.text = updated.toString()
-    }
-
     private fun buildDetectedProduct(): DetectedProduct? {
         val name = binding.etProductName.text?.toString()?.trim().orEmpty()
 
         return if (name.isNotEmpty()) {
-            binding.etProductName.error = null
-            val quantity = binding.tvQuantityValue.text.toString().toIntOrNull() ?: 1
+            // Quantity is always 1 for this screen (removed from UI)
             DetectedProduct(
                 name = name,
                 confidence = confidence,
-                quantity = quantity.coerceAtLeast(1),
+                quantity = 1,
                 approved = true
             )
         } else {
@@ -128,4 +153,3 @@ class ItemDetailsActivity : AppCompatActivity() {
         const val EXTRA_ADD_ANOTHER = "extra_add_another"
     }
 }
-

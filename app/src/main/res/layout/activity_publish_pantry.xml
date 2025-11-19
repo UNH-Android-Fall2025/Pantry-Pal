@@ -4,115 +4,252 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FA">
+    android:background="#F6F8F7">
 
-    <TextView
-        android:id="@+id/tvTitle"
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="📸 Publish Pantry"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:padding="16dp"
-        android:background="@android:color/white"
+        android:background="#F6F8F7"
+        android:minHeight="96dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <ImageView
-        android:id="@+id/ivPreview"
-        android:layout_width="0dp"
-        android:layout_height="300dp"
-        android:layout_margin="16dp"
-        android:background="@android:color/darker_gray"
-        android:scaleType="centerCrop"
-        android:contentDescription="Image preview"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_photo_camera"
+            android:tint="#121212"
+            android:layout_marginEnd="16dp"
+            android:contentDescription="Camera icon" />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintTop_toTopOf="@id/ivPreview"
-        app:layout_constraintBottom_toBottomOf="@id/ivPreview"
-        app:layout_constraintStart_toStartOf="@id/ivPreview"
-        app:layout_constraintEnd_toEndOf="@id/ivPreview" />
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Publish Pantry"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#121212"
+            android:lineSpacingExtra="4dp" />
 
-    <TextView
-        android:id="@+id/tvDetectionStatus"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Take a photo to scan products"
-        android:textSize="16sp"
-        android:textColor="@android:color/black"
-        android:padding="16dp"
-        android:gravity="center"
-        app:layout_constraintTop_toBottomOf="@id/ivPreview"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_arrow_back"
+            android:tint="#121212"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Go back"
+            android:padding="8dp" />
 
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btnProceedManually"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:text="@string/button_proceed_manually"
-        android:textSize="16sp"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/tvDetectionStatus"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+    </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerDetectedProducts"
+    <!-- Main Content Area -->
+    <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingBottom="8dp"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/tvDetectionStatus"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toTopOf="@id/containerActions"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="16dp">
+
+            <!-- Image Preview Container -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp">
+
+                <FrameLayout
+                    android:id="@+id/imageContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="32dp"
+                    android:background="#FFFFFF"
+                    android:minHeight="320dp">
+
+                    <!-- Image Preview -->
+                    <ImageView
+                        android:id="@+id/ivPreview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="Image preview"
+                        android:visibility="gone" />
+
+                    <!-- Placeholder Content -->
+                    <LinearLayout
+                        android:id="@+id/placeholderContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="32dp">
+
+                        <ImageView
+                            android:layout_width="96dp"
+                            android:layout_height="96dp"
+                            android:src="@drawable/ic_photo_camera"
+                            android:tint="#BDBDBD"
+                            android:contentDescription="Camera placeholder" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Your pantry image will appear here"
+                            android:textSize="14sp"
+                            android:textStyle="normal"
+                            android:textColor="#757575"
+                            android:layout_marginTop="16dp"
+                            android:gravity="center" />
+
+                    </LinearLayout>
+
+                    <!-- Progress Bar Overlay -->
+                    <ProgressBar
+                        android:id="@+id/progressBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:visibility="gone" />
+
+                </FrameLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Instruction Text -->
+            <TextView
+                android:id="@+id/tvDetectionStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Take a photo to scan products"
+                android:textSize="16sp"
+                android:textStyle="normal"
+                android:textColor="#757575"
+                android:gravity="center"
+                android:layout_marginTop="16dp" />
+
+            <!-- Proceed Manually Button (Hidden by default) -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnProceedManually"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_proceed_manually"
+                android:textSize="16sp"
+                android:visibility="gone"
+                android:layout_marginTop="16dp" />
+
+            <!-- Detected Products RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerDetectedProducts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:visibility="gone"
+                android:layout_marginTop="16dp" />
+
+            <!-- Continue Button (shown when items are detected) -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnContinue"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Continue"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/rounded_button_bg"
+                android:backgroundTint="#4CAF50"
+                android:letterSpacing="0.015"
+                android:elevation="4dp"
+                android:visibility="gone"
+                android:enabled="false"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- Bottom Action Buttons -->
     <LinearLayout
         android:id="@+id/containerActions"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="16dp"
+        android:background="#F6F8F7"
+        android:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <Button
+        <!-- Take Photo Button -->
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnTakePhoto"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="📷 Take Photo"
-            android:textSize="18sp"
-            android:layout_marginBottom="8dp" />
+            android:text="Take Photo"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/rounded_button_bg"
+            android:backgroundTint="#4CAF50"
+            android:drawableStart="@drawable/ic_photo_camera"
+            android:drawablePadding="8dp"
+            android:drawableTint="#FFFFFF"
+            android:letterSpacing="0.015"
+            android:elevation="4dp"
+            android:layout_marginBottom="12dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:gravity="center" />
 
-        <Button
+        <!-- Choose from Gallery Button -->
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnFromGallery"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="🖼️ Choose from Gallery"
-            android:textSize="18sp"
-            android:layout_marginBottom="8dp" />
-
-        <Button
-            android:id="@+id/btnContinue"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="✅ Continue to Confirm Products"
-            android:textSize="18sp"
-            android:visibility="gone"
-            android:backgroundTint="#4CAF50" />
+            android:text="Choose from Gallery"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/rounded_button_bg"
+            android:backgroundTint="#4CAF50"
+            android:drawableStart="@drawable/ic_photo_library"
+            android:drawablePadding="8dp"
+            android:drawableTint="#FFFFFF"
+            android:letterSpacing="0.015"
+            android:elevation="4dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:gravity="center" />
 
     </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
