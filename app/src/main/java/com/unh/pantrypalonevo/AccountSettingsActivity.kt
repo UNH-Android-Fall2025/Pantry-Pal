@@ -1,8 +1,6 @@
 package com.unh.pantrypalonevo
 
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -68,7 +66,7 @@ class AccountSettingsActivity : AppCompatActivity() {
     }
 
     private fun loadAccountInfo() {
-        val prefs = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
         val email = prefs.getString("user_email", "No email")
         val username = prefs.getString("user_username", "No username")
 
@@ -77,7 +75,7 @@ class AccountSettingsActivity : AppCompatActivity() {
     }
 
     private fun loadFingerprintStatus() {
-        val prefs = getSharedPreferences("PantryPrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
         isFingerprintEnabled = prefs.getBoolean("fingerprint_enabled", false)
         binding.switchFingerprint.isChecked = isFingerprintEnabled
     }
@@ -117,7 +115,7 @@ class AccountSettingsActivity : AppCompatActivity() {
         }
 
         // Update local preferences
-        val prefs = getSharedPreferences("PantryPrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
         prefs.edit().putBoolean("fingerprint_enabled", true).apply()
 
         // Update Firebase
@@ -144,7 +142,7 @@ class AccountSettingsActivity : AppCompatActivity() {
         }
 
         // Update local preferences
-        val prefs = getSharedPreferences("PantryPrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("PantryPrefs", MODE_PRIVATE)
         prefs.edit().putBoolean("fingerprint_enabled", false).apply()
 
         // Update Firebase

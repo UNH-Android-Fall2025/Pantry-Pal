@@ -1,6 +1,6 @@
 package com.unh.pantrypalonevo
 
-import android.content.Context
+import android.R
 import android.content.Intent
 import android.os.Bundle
 import android.widget.EditText
@@ -34,7 +34,7 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun loadDynamicUserProfile() {
-        val prefs = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
         val savedName = prefs.getString("user_name", null)
         val savedEmail = prefs.getString("user_email", null)
         val savedUsername = prefs.getString("user_username", null)
@@ -134,7 +134,7 @@ class ProfileActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Logout")
             .setMessage("Are you sure you want to logout?")
-            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setIcon(R.drawable.ic_dialog_alert)
             .setPositiveButton("Yes, Logout") { _, _ -> performLogout() }
             .setNegativeButton("Cancel", null)
             .show()
@@ -180,7 +180,7 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun showEditUsernameDialog() {
-        val prefs = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
         val currentUsername = prefs.getString("user_username", "") ?: ""
         
         val editText = EditText(this).apply {
@@ -219,7 +219,7 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         // Check if user is trying to keep their current username
-        val prefs = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
         val currentUsername = prefs.getString("user_username", "") ?: ""
         
         if (newUsername == currentUsername) {
@@ -244,7 +244,7 @@ class ProfileActivity : AppCompatActivity() {
             .update("username", newUsername)
             .addOnSuccessListener {
                 // Update in SharedPreferences
-                val prefs = getSharedPreferences("PantryPal_UserPrefs", Context.MODE_PRIVATE)
+                val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
                 prefs.edit()
                     .putString("user_username", newUsername)
                     .putString("user_name", newUsername) // Update user_name to use username

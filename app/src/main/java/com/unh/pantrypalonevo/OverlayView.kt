@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.View
 
@@ -48,7 +49,7 @@ class OverlayView @JvmOverloads constructor(
 
             // Draw label with background
             val label = "${detection.label} ${(detection.confidence * 100).toInt()}%"
-            val textBounds = android.graphics.Rect()
+            val textBounds = Rect()
             textPaint.getTextBounds(label, 0, label.length, textBounds)
 
             val textX = box.left

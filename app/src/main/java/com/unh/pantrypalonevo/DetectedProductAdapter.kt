@@ -1,6 +1,8 @@
 package com.unh.pantrypalonevo
 
+import android.graphics.Color
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.unh.pantrypalonevo.databinding.ItemDetectedProductBinding
@@ -44,18 +46,18 @@ class DetectedProductAdapter(
             
             // Update checkmark icon and tint based on selection
             if (isSelected) {
-                btnTickMark.setImageResource(com.unh.pantrypalonevo.R.drawable.ic_check_circle)
-                btnTickMark.setColorFilter(android.graphics.Color.parseColor("#4CAF50"))
+                btnTickMark.setImageResource(R.drawable.ic_check_circle)
+                btnTickMark.setColorFilter(Color.parseColor("#4CAF50"))
             } else {
-                btnTickMark.setImageResource(com.unh.pantrypalonevo.R.drawable.ic_check_circle_outline)
-                btnTickMark.setColorFilter(android.graphics.Color.parseColor("#757575"))
+                btnTickMark.setImageResource(R.drawable.ic_check_circle_outline)
+                btnTickMark.setColorFilter(Color.parseColor("#757575"))
             }
 
             // Show/hide action buttons based on expanded state
             layoutActionButtons.visibility = if (isExpanded && !product.approved) {
-                android.view.View.VISIBLE
+                View.VISIBLE
             } else {
-                android.view.View.GONE
+                View.GONE
             }
 
             // Tick mark click - toggle selection

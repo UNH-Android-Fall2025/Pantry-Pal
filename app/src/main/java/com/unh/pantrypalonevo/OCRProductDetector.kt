@@ -1,5 +1,7 @@
 package com.unh.pantrypalonevo
 
+import kotlin.collections.iterator
+
 object OCRProductDetector {
 
     data class ProductMatch(

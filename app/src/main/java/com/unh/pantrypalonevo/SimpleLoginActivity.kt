@@ -1,9 +1,14 @@
 package com.unh.pantrypalonevo
 
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
+import android.text.InputType
 import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -11,7 +16,10 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -20,18 +28,18 @@ import java.util.concurrent.Executor
 
 class SimpleLoginActivity : AppCompatActivity() {
     
-    private lateinit var etEmail: android.widget.EditText
-    private lateinit var etPassword: android.widget.EditText
-    private lateinit var btnLogin: android.widget.Button
-    private lateinit var btnGoogleSignIn: android.widget.LinearLayout
-    private lateinit var btnFacebookSignIn: android.widget.LinearLayout
-    private lateinit var btnTogglePassword: android.widget.ImageButton
-    private lateinit var tvForgotPassword: android.widget.TextView
-    private lateinit var tvSignUp: android.widget.TextView
-    private lateinit var tvUseDifferentEmail: android.widget.TextView
+    private lateinit var etEmail: EditText
+    private lateinit var etPassword: EditText
+    private lateinit var btnLogin: Button
+    private lateinit var btnGoogleSignIn: LinearLayout
+    private lateinit var btnFacebookSignIn: LinearLayout
+    private lateinit var btnTogglePassword: ImageButton
+    private lateinit var tvForgotPassword: TextView
+    private lateinit var tvSignUp: TextView
+    private lateinit var tvUseDifferentEmail: TextView
     private var isPasswordVisible = false
     
-    private lateinit var googleSignInClient: com.google.android.gms.auth.api.signin.GoogleSignInClient
+    private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
@@ -152,10 +160,10 @@ class SimpleLoginActivity : AppCompatActivity() {
             
             // Check if Google Play Services is available
             try {
-                val googleApiAvailability = com.google.android.gms.common.GoogleApiAvailability.getInstance()
+                val googleApiAvailability = GoogleApiAvailability.getInstance()
                 val resultCode = googleApiAvailability.isGooglePlayServicesAvailable(this)
                 
-                if (resultCode != com.google.android.gms.common.ConnectionResult.SUCCESS) {
+                if (resultCode != ConnectionResult.SUCCESS) {
                     Toast.makeText(this, "Google Play Services not available", Toast.LENGTH_LONG).show()
                     return
                 }
@@ -208,11 +216,11 @@ class SimpleLoginActivity : AppCompatActivity() {
             
             if (isPasswordVisible) {
                 // Show password
-                etPassword.inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
                 btnTogglePassword.setImageResource(R.drawable.ic_visibility_off)
             } else {
                 // Hide password
-                etPassword.inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                 btnTogglePassword.setImageResource(R.drawable.ic_visibility)
             }
             

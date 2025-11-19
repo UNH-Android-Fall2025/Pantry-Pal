@@ -6,6 +6,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import java.net.URLEncoder
 
 /**
  * SMART Product Searcher with English-only filtering
@@ -48,7 +49,7 @@ class SimpleProductSearcher {
             Log.d(TAG, "✅ Searching for valid food: $label")
 
             // Search Open Food Facts with English language filter
-            val encodedLabel = java.net.URLEncoder.encode(label, "UTF-8")
+            val encodedLabel = URLEncoder.encode(label, "UTF-8")
             val url = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=$encodedLabel&search_simple=1&json=1&page_size=5&lc=en"
 
             val request = Request.Builder()

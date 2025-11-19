@@ -1,8 +1,6 @@
 package com.unh.pantrypalonevo
 
-import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
@@ -12,6 +10,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -62,7 +61,7 @@ class PublishPantryActivity : AppCompatActivity() {
     private val itemDetailsLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+        if (result.resultCode == RESULT_OK) {
             val data = result.data
             val confirmedItem = getConfirmedProduct(data)
             val addAnother = data?.getBooleanExtra(ItemDetailsActivity.EXTRA_ADD_ANOTHER, false) ?: false
@@ -484,7 +483,7 @@ class PublishPantryActivity : AppCompatActivity() {
     }
 
     private fun showProceedManuallyDialog() {
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        AlertDialog.Builder(this)
             .setTitle(getString(R.string.dialog_item_not_detected_title))
             .setMessage(getString(R.string.dialog_item_not_detected_message))
             .setPositiveButton(getString(android.R.string.yes)) { _, _ ->

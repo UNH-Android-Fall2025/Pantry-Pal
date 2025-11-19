@@ -1,17 +1,18 @@
 package com.unh.pantrypalonevo
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import com.unh.pantrypalonevo.databinding.ActivityLoginBinding
 import java.util.concurrent.Executor
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -36,12 +37,12 @@ class LoginActivity : AppCompatActivity() {
 
             // Adjust button for light/dark mode
             val nightModeFlags = resources.configuration.uiMode and
-                    android.content.res.Configuration.UI_MODE_NIGHT_MASK
+                    Configuration.UI_MODE_NIGHT_MASK
             when (nightModeFlags) {
-                android.content.res.Configuration.UI_MODE_NIGHT_YES ->
-                    googleButton.setColorScheme(com.google.android.gms.common.SignInButton.COLOR_LIGHT)
+                Configuration.UI_MODE_NIGHT_YES ->
+                    googleButton.setColorScheme(SignInButton.COLOR_LIGHT)
                 else ->
-                    googleButton.setColorScheme(com.google.android.gms.common.SignInButton.COLOR_DARK)
+                    googleButton.setColorScheme(SignInButton.COLOR_DARK)
             }
 
             // Google sign-in setup
