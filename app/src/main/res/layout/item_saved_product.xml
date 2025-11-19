@@ -5,63 +5,180 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="16dp"
-    android:layout_marginVertical="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="2dp">
+    android:layout_marginBottom="16dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:gravity="center_vertical">
+        android:orientation="vertical">
 
+        <!-- Top Section: Product Info and Image -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/tvProductName"
-                android:layout_width="wrap_content"
+            <!-- Left: Product Info -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                tools:text="Banana" />
+                android:layout_weight="2"
+                android:orientation="vertical"
+                android:gravity="start">
 
-            <TextView
-                android:id="@+id/tvQuantity"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="14sp"
-                tools:text="Quantity: 2" />
+                <TextView
+                    android:id="@+id/tvProductName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#111814"
+                    tools:text="Organic Diced Tomatoes" />
 
-            <TextView
-                android:id="@+id/tvConfidence"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="12sp"
-                android:textColor="?attr/colorSecondary"
-                tools:text="Confidence: 92%" />
+                <TextView
+                    android:id="@+id/tvCategory"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textSize="14sp"
+                    android:textStyle="normal"
+                    android:textColor="#638872"
+                    tools:text="Canned Goods" />
+
+                <!-- Remove Button -->
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnRemove"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Remove"
+                    android:textSize="14sp"
+                    android:textStyle="normal"
+                    android:textColor="#111814"
+                    android:background="@drawable/rounded_pill_bg"
+                    android:backgroundTint="#F0F4F2"
+                    android:drawableStart="@drawable/ic_delete"
+                    android:drawablePadding="8dp"
+                    android:drawableTint="#111814"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical" />
+
+            </LinearLayout>
+
+            <!-- Right: Product Image -->
+            <ImageView
+                android:id="@+id/ivProductImage"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:minWidth="80dp"
+                android:minHeight="80dp"
+                android:scaleType="centerCrop"
+                android:background="#F0F4F2"
+                android:contentDescription="Product image"
+                tools:src="@android:drawable/ic_menu_gallery" />
 
         </LinearLayout>
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnRemove"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Remove"
-            android:textSize="12sp"
-            android:textColor="@android:color/white"
-            android:backgroundTint="#F44336"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="8dp" />
+        <!-- Bottom Section: Confidence and Quantity Controls -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#DCE5DF" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:gravity="center_vertical">
+
+            <!-- Confidence -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_verified"
+                    android:tint="#638872"
+                    android:layout_marginEnd="12dp"
+                    android:contentDescription="Verified" />
+
+                <TextView
+                    android:id="@+id/tvConfidence"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textStyle="normal"
+                    android:textColor="#638872"
+                    tools:text="Confidence: 98%" />
+
+            </LinearLayout>
+
+            <!-- Quantity Controls -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <Button
+                    android:id="@+id/btnQuantityMinus"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:text="-"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#111814"
+                    android:background="@drawable/rounded_button_circle"
+                    android:backgroundTint="#F0F4F2"
+                    android:padding="0dp"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp" />
+
+                <TextView
+                    android:id="@+id/tvQuantity"
+                    android:layout_width="24dp"
+                    android:layout_height="wrap_content"
+                    android:text="1"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#111814"
+                    android:gravity="center"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:minWidth="24dp" />
+
+                <Button
+                    android:id="@+id/btnQuantityPlus"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:text="+"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#111814"
+                    android:background="@drawable/rounded_button_circle"
+                    android:backgroundTint="#F0F4F2"
+                    android:padding="0dp"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>
-

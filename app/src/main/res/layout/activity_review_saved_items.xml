@@ -5,96 +5,232 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="#F6F8F7">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <!-- Top App Bar -->
+    <LinearLayout
+        android:id="@+id/topAppBar"
         android:layout_width="0dp"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        app:title="@string/title_review_saved_items"
-        app:titleTextColor="@android:color/white"
-        app:navigationIcon="?attr/homeAsUpIndicator"
-        app:navigationIconTint="@android:color/white"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#33E67A"
+        android:padding="16dp"
+        android:paddingBottom="8dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <TextView
-        android:id="@+id/tvItemCount"
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_arrow_back"
+            android:tint="#111814"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Go back"
+            android:padding="8dp" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Review Saved Items"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#111814"
+            android:paddingStart="8dp"
+            android:paddingTop="8dp" />
+
+    </LinearLayout>
+
+    <!-- Stats Info Bar -->
+    <LinearLayout
+        android:id="@+id/statsInfoBar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:text="0 item(s) • Total quantity: 0"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toBottomOf="@id/topAppBar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerSavedItems"
+        <!-- Item Count Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
+            app:strokeWidth="1dp"
+            app:strokeColor="#DCE5DF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:minWidth="158dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Item count"
+                    android:textSize="16sp"
+                    android:textStyle="normal"
+                    android:textColor="#638872" />
+
+                <TextView
+                    android:id="@+id/tvItemCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#111814"
+                    android:layout_marginTop="8dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Total Quantity Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
+            app:strokeWidth="1dp"
+            app:strokeColor="#DCE5DF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:minWidth="158dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total quantity"
+                    android:textSize="16sp"
+                    android:textStyle="normal"
+                    android:textColor="#638872" />
+
+                <TextView
+                    android:id="@+id/tvTotalQuantity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#111814"
+                    android:layout_marginTop="8dp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+
+    <!-- Item Cards List -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/tvItemCount"
-        app:layout_constraintBottom_toTopOf="@id/buttonPanel"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/statsInfoBar"
+        app:layout_constraintBottom_toTopOf="@id/bottomActions"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <TextView
-        android:id="@+id/tvEmptyMessage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/message_no_items_saved"
-        android:textSize="16sp"
-        android:textColor="?attr/colorSecondary"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/tvItemCount"
-        app:layout_constraintBottom_toTopOf="@id/buttonPanel"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:paddingTop="0dp">
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerSavedItems"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false" />
+
+            <TextView
+                android:id="@+id/tvEmptyMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/message_no_items_saved"
+                android:textSize="16sp"
+                android:textColor="#638872"
+                android:visibility="gone"
+                android:layout_gravity="center"
+                android:layout_marginTop="32dp" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Action Buttons -->
     <LinearLayout
-        android:id="@+id/buttonPanel"
+        android:id="@+id/bottomActions"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@android:color/white"
+        android:paddingTop="8dp"
+        android:background="#F6F8F7"
         android:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Add another item to pantry -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnAddMore"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/action_add_another_item"
-            android:textSize="16sp" />
+            android:layout_height="48dp"
+            android:text="Add another item to pantry"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#33E67A"
+            android:background="@drawable/rounded_button_bordered"
+            android:backgroundTint="@android:color/transparent"
+            android:letterSpacing="0.015"
+            android:layout_marginBottom="12dp" />
 
+        <!-- Publish Pantry -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnPublishPantry"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/button_publish_pantry"
+            android:layout_height="56dp"
+            android:text="Publish Pantry"
             android:textSize="16sp"
-            android:textColor="@android:color/white"
-            android:backgroundTint="?attr/colorPrimary" />
+            android:textStyle="bold"
+            android:textColor="#111814"
+            android:background="@drawable/rounded_button_bg"
+            android:backgroundTint="#33E67A"
+            android:letterSpacing="0.015"
+            android:elevation="4dp"
+            android:layout_marginBottom="12dp" />
 
+        <!-- Disassemble Pantry -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnDisassemblePantry"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/button_disassemble_pantry"
+            android:layout_height="48dp"
+            android:text="Disassemble Pantry"
             android:textSize="16sp"
-            android:textColor="?attr/colorPrimary"
-            android:backgroundTint="@android:color/transparent" />
+            android:textStyle="bold"
+            android:textColor="#33E67A"
+            android:background="@android:color/transparent"
+            android:letterSpacing="0.015" />
 
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

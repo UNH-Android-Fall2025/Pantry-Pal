@@ -18,24 +18,25 @@ class ReviewSavedItemsActivity : AppCompatActivity() {
 
 	private lateinit var binding: ActivityReviewSavedItemsBinding
 	private val savedItems = mutableListOf<DetectedProduct>()
+	private val imageUriMap = mutableMapOf<String, String>()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		binding = ActivityReviewSavedItemsBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
-		setupToolbar()
+		setupBackButton()
 		loadSavedItems()
+		loadImageUris()
 		setupRecyclerView()
 		setupButtons()
-		updateItemCount()
+		updateStats()
 	}
 
-	private fun setupToolbar() {
-		setSupportActionBar(binding.toolbar)
-		supportActionBar?.setDisplayHomeAsUpEnabled(true)
-		supportActionBar?.title = getString(R.string.title_review_saved_items)
-		binding.toolbar.setNavigationOnClickListener { finish() }
+	private fun setupBackButton() {
+		binding.btnBack.setOnClickListener {
+			finish()
+		}
 	}
 
 	private fun loadSavedItems() {
@@ -51,6 +52,23 @@ class ReviewSavedItemsActivity : AppCompatActivity() {
 		}
 	}
 
+	private fun loadImageUris() {
+		// Load image URI map from intent
+		intent.getStringArrayListExtra(EXTRA_IMAGE_URIS)?.forEachIndexed { index, uri ->
+			if (index < savedItems.size) {
+				imageUriMap[savedItems[index].name] = uri
+			}
+		}
+		// Also try loading from bundle if available
+		intent.getBundleExtra(EXTRA_IMAGE_URI_MAP)?.let { bundle ->
+			bundle.keySet().forEach { key ->
+				bundle.getString(key)?.let { uri ->
+					imageUriMap[key] = uri
+				}
+			}
+		}
+	}
+
 	private fun setupRecyclerView() {
 		if (savedItems.isEmpty()) {
 			binding.recyclerSavedItems.visibility = View.GONE
@@ -62,9 +80,10 @@ class ReviewSavedItemsActivity : AppCompatActivity() {
 		binding.recyclerSavedItems.visibility = View.VISIBLE
 		binding.tvEmptyMessage.visibility = View.GONE
 
-		val adapter = SavedItemsAdapter(savedItems) { updatedItems ->
-			savedItems.clear(); savedItems.addAll(updatedItems)
-			updateItemCount()
+		val adapter = SavedItemsAdapter(savedItems, imageUriMap) { updatedItems ->
+			savedItems.clear()
+			savedItems.addAll(updatedItems)
+			updateStats()
 			toggleEmptyState()
 		}
 
@@ -88,9 +107,12 @@ class ReviewSavedItemsActivity : AppCompatActivity() {
 		binding.btnDisassemblePantry.setOnClickListener { disassemblePantry() }
 	}
 
-	private fun updateItemCount() {
-		val totalItems = savedItems.sumOf { it.quantity }
-		binding.tvItemCount.text = "${savedItems.size} item(s) • Total quantity: $totalItems"
+	private fun updateStats() {
+		val itemCount = savedItems.size
+		val totalQuantity = savedItems.sumOf { it.quantity }
+		
+		binding.tvItemCount.text = itemCount.toString()
+		binding.tvTotalQuantity.text = totalQuantity.toString()
 	}
 
 	private fun toggleEmptyState() {
@@ -101,6 +123,7 @@ class ReviewSavedItemsActivity : AppCompatActivity() {
 			binding.recyclerSavedItems.visibility = View.VISIBLE
 			binding.tvEmptyMessage.visibility = View.GONE
 		}
+		updateStats()
 	}
 
 	private fun disassemblePantry() {
@@ -110,11 +133,14 @@ class ReviewSavedItemsActivity : AppCompatActivity() {
 		}
 		savedItems.clear()
 		setupRecyclerView()
-		updateItemCount()
+		updateStats()
 		Toast.makeText(this, getString(R.string.toast_items_removed), Toast.LENGTH_SHORT).show()
 		finish()
 	}
 
-	companion object { const val EXTRA_SAVED_ITEMS = "extra_saved_items" }
+	companion object { 
+		const val EXTRA_SAVED_ITEMS = "extra_saved_items"
+		const val EXTRA_IMAGE_URIS = "extra_image_uris"
+		const val EXTRA_IMAGE_URI_MAP = "extra_image_uri_map"
+	}
 }
-

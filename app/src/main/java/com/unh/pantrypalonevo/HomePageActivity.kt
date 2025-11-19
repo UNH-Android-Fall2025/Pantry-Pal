@@ -12,6 +12,8 @@ import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.unh.pantrypalonevo.databinding.ActivityHomePageBinding
 import com.unh.pantrypalonevo.model.Pantry
 import com.unh.pantrypalonevo.adapter.PantryAdapter
@@ -22,6 +24,7 @@ class HomePageActivity : AppCompatActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var pantryAdapter: PantryAdapter
     private val pantryList = mutableListOf<Pantry>()
+    private val firestore by lazy { FirebaseFirestore.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,8 +60,8 @@ class HomePageActivity : AppCompatActivity() {
         // ✅ Fused location client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // ✅ Load sample pantries (replace with Firestore later)
-        loadSamplePantries()
+        // ✅ Load Firestore pantries (fallback to samples if none)
+        loadPantries()
 
         // ✅ Handle location enable card
         binding.btnEnableLocation.setOnClickListener {
@@ -111,7 +114,40 @@ class HomePageActivity : AppCompatActivity() {
         binding.bottomNavigation.isClickable = true
     }
 
-    // === SAMPLE PANTRIES (you can replace with real Firestore later) ===
+    private fun loadPantries() {
+        firestore.collection("pantries")
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(20)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                pantryList.clear()
+                if (!snapshot.isEmpty) {
+                    snapshot.documents.forEach { doc ->
+                        val name = doc.getString("name").orEmpty()
+                        val address = doc.getString("address").orEmpty()
+                        val start = doc.getString("startDate").orEmpty()
+                        val end = doc.getString("endDate").orEmpty()
+                        pantryList.add(
+                            Pantry(
+                                name = name.ifBlank { "Untitled Pantry" },
+                                description = listOf(start, end).filter { it.isNotBlank() }.joinToString(" - "),
+                                address = address,
+                                distance = doc.getString("distance").orEmpty()
+                            )
+                        )
+                    }
+                    pantryAdapter.notifyDataSetChanged()
+                } else {
+                    loadSamplePantries()
+                }
+            }
+            .addOnFailureListener {
+                loadSamplePantries()
+                Toast.makeText(this, "Unable to load pantries. Showing samples.", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // === SAMPLE PANTRIES (fallback when Firestore empty/offline) ===
     private fun loadSamplePantries() {
         pantryList.clear()
         pantryList.addAll(

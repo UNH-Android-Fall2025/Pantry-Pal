@@ -7,10 +7,12 @@ import com.unh.pantrypalonevo.databinding.ItemDetectedProductBinding
 
 class DetectedProductAdapter(
     private val onProductConfirm: (DetectedProduct) -> Unit,
-    private val onProductReject: (DetectedProduct) -> Unit
+    private val onProductReject: (DetectedProduct) -> Unit,
+    private val onSelectionChanged: (Int) -> Unit = {}
 ) : RecyclerView.Adapter<DetectedProductAdapter.DetectedProductViewHolder>() {
 
     private val products = mutableListOf<DetectedProduct>()
+    private val selectedProducts = mutableSetOf<Int>()
     private var expandedPosition = -1
 
     inner class DetectedProductViewHolder(
@@ -34,9 +36,20 @@ class DetectedProductAdapter(
             tvProductName.text = product.name
             tvConfidence.text = "Confidence: ${(product.confidence * 100).toInt()}%"
 
-            // Update tick mark state
-            btnTickMark.isEnabled = !product.approved
+            // Update checkmark state - show checked if selected
+            val isSelected = selectedProducts.contains(position)
+            btnTickMark.isSelected = isSelected
             btnTickMark.alpha = if (product.approved) 0.4f else 1f
+            btnTickMark.isEnabled = !product.approved
+            
+            // Update checkmark icon and tint based on selection
+            if (isSelected) {
+                btnTickMark.setImageResource(com.unh.pantrypalonevo.R.drawable.ic_check_circle)
+                btnTickMark.setColorFilter(android.graphics.Color.parseColor("#4CAF50"))
+            } else {
+                btnTickMark.setImageResource(com.unh.pantrypalonevo.R.drawable.ic_check_circle_outline)
+                btnTickMark.setColorFilter(android.graphics.Color.parseColor("#757575"))
+            }
 
             // Show/hide action buttons based on expanded state
             layoutActionButtons.visibility = if (isExpanded && !product.approved) {
@@ -45,16 +58,16 @@ class DetectedProductAdapter(
                 android.view.View.GONE
             }
 
-            // Tick mark click - toggle expansion
+            // Tick mark click - toggle selection
             btnTickMark.setOnClickListener {
                 if (!product.approved) {
-                    val previousExpanded = expandedPosition
-                    expandedPosition = if (isExpanded) -1 else position
-                    
-                    if (previousExpanded != -1 && previousExpanded != position) {
-                        notifyItemChanged(previousExpanded)
+                    if (selectedProducts.contains(position)) {
+                        selectedProducts.remove(position)
+                    } else {
+                        selectedProducts.add(position)
                     }
                     notifyItemChanged(position)
+                    onSelectionChanged(selectedProducts.size)
                 }
             }
 
@@ -81,8 +94,16 @@ class DetectedProductAdapter(
     fun submitList(newProducts: List<DetectedProduct>) {
         products.clear()
         products.addAll(newProducts)
+        selectedProducts.clear()
         expandedPosition = -1
         notifyDataSetChanged()
+        onSelectionChanged(0)
+    }
+    
+    fun getSelectedProducts(): List<DetectedProduct> {
+        return selectedProducts.mapNotNull { index ->
+            if (index in products.indices) products[index] else null
+        }
     }
 
     fun removeProduct(product: DetectedProduct) {
