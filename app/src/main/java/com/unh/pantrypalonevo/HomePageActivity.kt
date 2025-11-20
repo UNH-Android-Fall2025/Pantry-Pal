@@ -40,12 +40,10 @@ class HomePageActivity : AppCompatActivity() {
         binding = ActivityHomePageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // ✅ Load logged-in user's username
         val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
         val username = prefs.getString("user_username", null)
         val displayName = prefs.getString("user_name", "User")
         
-        // Use username if available, otherwise fallback to display name
         val greetingName = if (!username.isNullOrBlank()) {
             username
         } else {
@@ -54,19 +52,17 @@ class HomePageActivity : AppCompatActivity() {
         
         binding.tvGreeting.text = "Hello, $greetingName!"
 
-        // ✅ RecyclerView setup
         pantryAdapter = PantryAdapter(pantryList) { pantry ->
-            // On click → open PantryLocationActivity (details)
             val intent = Intent(this, PantryLocationActivity::class.java)
             intent.putExtra("pantry_name", pantry.name)
             intent.putExtra("pantry_address", pantry.address)
             intent.putExtra("pantry_description", pantry.description)
             startActivity(intent)
         }
+
         binding.rvPantryList.layoutManager = LinearLayoutManager(this)
         binding.rvPantryList.adapter = pantryAdapter
 
-        // ✅ Fused location client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         // ✅ Initialize Places Service
@@ -75,7 +71,6 @@ class HomePageActivity : AppCompatActivity() {
         // ✅ Load pantries from Places API and Firestore
         loadPantries()
 
-        // ✅ Handle location enable card
         binding.btnEnableLocation.setOnClickListener {
             requestLocationPermissionAndFetch()
         }
@@ -113,33 +108,28 @@ class HomePageActivity : AppCompatActivity() {
             }
         }
 
-        // ✅ Bottom navigation wiring
         binding.btnHome.setOnClickListener {
-            // already on Home — scroll to top as a UX nicety
             binding.scrollView.smoothScrollTo(0, 0)
         }
+
         binding.btnRecipes.setOnClickListener {
-            // Navigate to Recipes page (or show toast for now)
-            Toast.makeText(this, "Recipes page coming soon!", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, RecipeActivity::class.java)
+            intent.putExtra("product_name", "Potato")
+            startActivity(intent)
         }
+
         binding.btnAdd.setOnClickListener {
-            // Navigate to PublishPantryActivity (add new pantry)
             startActivity(Intent(this, PublishPantryActivity::class.java))
         }
+
         binding.btnPantry.setOnClickListener {
-            // Navigate to Cart
             startActivity(Intent(this, CartActivity::class.java))
         }
+
         binding.btnProfile.setOnClickListener {
-            // open your profile screen
             startActivity(Intent(this, ProfileActivity::class.java))
         }
 
-        // ✅ Launch Pantry Detector (for testing object detection)
-        // You can add a button in the layout or use this as a quick test entry point
-        // For now, you can launch it via ADB: adb shell am start -n com.unh.pantrypalonevo/.PantryDetectorActivity
-
-        // Ensure bottom bar always receives taps (avoid overlap from list)
         binding.bottomNavigation.bringToFront()
         binding.bottomNavigation.isClickable = true
     }
@@ -148,9 +138,9 @@ class HomePageActivity : AppCompatActivity() {
         // If we have user location, fetch from Google Places API (primary source)
         if (userLocation != null) {
             // Load from Firestore in parallel, but prioritize Places API
-            firestore.collection("pantries")
-                .get()
-                .addOnSuccessListener { snapshot ->
+        firestore.collection("pantries")
+            .get()
+            .addOnSuccessListener { snapshot ->
                     val loadedPantries = snapshot.documents.mapNotNull { doc ->
                         val name = doc.getString("name").orEmpty()
                         val address = doc.getString("address").orEmpty()
@@ -166,10 +156,10 @@ class HomePageActivity : AppCompatActivity() {
                         val distanceText = distanceMeters?.let { formatDistance(it) }
                             ?: doc.getString("distance").orEmpty()
 
-                        Pantry(
-                            name = name.ifBlank { "Untitled Pantry" },
-                            description = listOf(start, end).filter { it.isNotBlank() }.joinToString(" - "),
-                            address = address,
+                            Pantry(
+                                name = name.ifBlank { "Untitled Pantry" },
+                                description = listOf(start, end).filter { it.isNotBlank() }.joinToString(" - "),
+                                address = address,
                             distance = distanceText,
                             latitude = lat,
                             longitude = lon,
@@ -331,7 +321,6 @@ class HomePageActivity : AppCompatActivity() {
         }
     }
 
-    // === LOCATION PERMISSION & FETCH ===
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) fetchUserLocation()
@@ -467,6 +456,6 @@ class HomePageActivity : AppCompatActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
-        }
+            }
     }
 }
