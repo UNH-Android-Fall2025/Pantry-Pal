@@ -43,4 +43,7 @@
 	<string name="action_reject">Reject</string>
 	<string name="error_required">Required</string>
 	<string name="toast_pantry_published">Pantry published</string>
+	
+	<!-- Google Places API Key -->
+	<string name="google_places_api_key">AIzaSyB3ZDCuXZ04C1QI5LdNqcoSEu-r4G79o9M</string>
 </resources>

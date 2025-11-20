@@ -1,17 +1,22 @@
 package com.unh.pantrypalonevo
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Bundle
 import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.mlkit.vision.common.InputImage
@@ -21,6 +26,7 @@ import com.unh.pantrypalonevo.databinding.ActivityPublishPantryBinding
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
+import java.io.File
 
 /**
  * ULTRA SIMPLE VERSION - Accept ALL Food-Related Labels
@@ -31,12 +37,37 @@ class PublishPantryActivity : AppCompatActivity() {
     private lateinit var binding: ActivityPublishPantryBinding
     private var capturedImageBitmap: Bitmap? = null
     private var capturedImageUri: Uri? = null
+    private var cameraImageUri: Uri? = null
     private var detectedProducts = mutableListOf<DetectedProduct>()
     private lateinit var detectedProductAdapter: DetectedProductAdapter
     private val confirmedProducts = mutableListOf<DetectedProduct>()
     private var pendingProduct: DetectedProduct? = null
     private val pendingSelectedProducts = mutableListOf<DetectedProduct>()
     private val productImageUriMap = mutableMapOf<String, String>()
+
+    private val takePictureLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            cameraImageUri?.let { uri ->
+                handleCapturedPhoto(uri)
+            } ?: run {
+                Toast.makeText(this, "Unable to access captured image", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            cameraImageUri = null
+        }
+    }
+
+    private val requestCameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            launchCamera()
+        } else {
+            Toast.makeText(this, "Camera permission is required to take photos", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // Gallery launcher
     private val pickImageLauncher = registerForActivityResult(
@@ -180,9 +211,73 @@ class PublishPantryActivity : AppCompatActivity() {
         }
     }
 
+    private fun handleTakePhotoClick() {
+        when {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
+                launchCamera()
+            }
+            ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA) -> {
+                AlertDialog.Builder(this)
+                    .setTitle("Camera permission needed")
+                    .setMessage("Pantry Pal needs camera access to take photos of your pantry items.")
+                    .setPositiveButton("Allow") { _, _ ->
+                        requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                    .setNegativeButton("Not now", null)
+                    .show()
+            }
+            else -> {
+                requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
+
+    private fun launchCamera() {
+        val imageUri = createImageUri()
+        if (imageUri != null) {
+            cameraImageUri = imageUri
+            takePictureLauncher.launch(imageUri)
+        } else {
+            Toast.makeText(this, "Unable to open camera", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun createImageUri(): Uri? {
+        return try {
+            val imagesDir = File(cacheDir, "camera_images").apply {
+                if (!exists()) mkdirs()
+            }
+            val imageFile = File.createTempFile("pantry_capture_", ".jpg", imagesDir)
+            val authority = "${applicationContext.packageName}.fileprovider"
+            FileProvider.getUriForFile(this, authority, imageFile)
+        } catch (e: Exception) {
+            Log.e("PublishPantry", "Error creating image file", e)
+            null
+        }
+    }
+
+    private fun handleCapturedPhoto(uri: Uri) {
+        try {
+            contentResolver.openInputStream(uri)?.use { stream ->
+                val bitmap = BitmapFactory.decodeStream(stream)
+                capturedImageBitmap = bitmap
+                capturedImageUri = uri
+                binding.ivPreview.setImageBitmap(bitmap)
+                updateImagePreviewVisibility()
+                clearDetectedProducts()
+                detectProducts(bitmap)
+            } ?: run {
+                Toast.makeText(this, "Unable to read captured image", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Log.e("PublishPantry", "Error handling captured photo", e)
+            Toast.makeText(this, "Error processing captured image", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun setupClickListeners() {
         binding.btnTakePhoto.setOnClickListener {
-            Toast.makeText(this, "Camera feature coming soon", Toast.LENGTH_SHORT).show()
+            handleTakePhotoClick()
         }
 
         binding.btnFromGallery.setOnClickListener {
