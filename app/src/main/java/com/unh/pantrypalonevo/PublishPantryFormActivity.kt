@@ -2,11 +2,14 @@ package com.unh.pantrypalonevo
 
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.pantrypalonevo.databinding.ActivityPublishPantryFormBinding
@@ -19,16 +22,47 @@ class PublishPantryFormActivity : AppCompatActivity() {
     private lateinit var binding: ActivityPublishPantryFormBinding
     private val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
     private val firestore by lazy { FirebaseFirestore.getInstance() }
+    private val auth by lazy { FirebaseAuth.getInstance() }
+    private val pantryItems = mutableListOf<DetectedProduct>()
+    private val imageUriMap = mutableMapOf<String, String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityPublishPantryFormBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        loadPantryItems()
         setupToolbar()
         setupTextFields()
         setupDatePickers()
         setupButtons()
+    }
+    
+    private fun loadPantryItems() {
+        // Load items from intent
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayListExtra(EXTRA_PANTRY_ITEMS, DetectedProduct::class.java)?.let {
+                pantryItems.clear()
+                pantryItems.addAll(it)
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableArrayListExtra<DetectedProduct>(EXTRA_PANTRY_ITEMS)?.let {
+                pantryItems.clear()
+                pantryItems.addAll(it)
+            }
+        }
+        
+        // Load image URI map
+        intent.getBundleExtra(EXTRA_IMAGE_URI_MAP)?.let { bundle ->
+            bundle.keySet().forEach { key ->
+                bundle.getString(key)?.let { uri ->
+                    imageUriMap[key] = uri
+                }
+            }
+        }
+        
+        Log.d("PublishPantryForm", "Loaded ${pantryItems.size} items for pantry")
     }
 
     private fun setupToolbar() {
@@ -92,24 +126,81 @@ class PublishPantryFormActivity : AppCompatActivity() {
     }
 
     private fun publishPantry(name: String, address: String, startDate: String, endDate: String) {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Toast.makeText(this, "You must be logged in to publish a pantry.", Toast.LENGTH_SHORT).show()
+            binding.btnConfirm.isEnabled = true
+            return
+        }
+        
         binding.btnConfirm.isEnabled = false
-        val pantryData = hashMapOf(
+        
+        // Convert products to map for Firestore
+        val productsList = pantryItems.map { product ->
+            hashMapOf(
+                "name" to product.name,
+                "quantity" to product.quantity,
+                "confidence" to product.confidence,
+                "imageUri" to (imageUriMap[product.name] ?: "")
+            )
+        }
+        
+        val pantryData = hashMapOf<String, Any>(
             "name" to name,
             "address" to address,
             "startDate" to startDate,
             "endDate" to endDate,
-            "createdAt" to FieldValue.serverTimestamp()
+            "ownerId" to currentUser.uid,
+            "ownerEmail" to (currentUser.email ?: ""),
+            "products" to productsList,
+            "productCount" to pantryItems.size,
+            "createdAt" to FieldValue.serverTimestamp(),
+            "updatedAt" to FieldValue.serverTimestamp()
         )
+
+        Log.d("PublishPantryForm", "📝 Publishing pantry to Firestore:")
+        Log.d("PublishPantryForm", "   - Name: $name")
+        Log.d("PublishPantryForm", "   - Address: $address")
+        Log.d("PublishPantryForm", "   - Owner ID: ${currentUser.uid}")
+        Log.d("PublishPantryForm", "   - Owner Email: ${currentUser.email}")
+        Log.d("PublishPantryForm", "   - Products: ${pantryItems.size} items")
+        Log.d("PublishPantryForm", "   - Collection: pantries")
 
         firestore.collection("pantries")
             .add(pantryData)
-            .addOnSuccessListener {
+            .addOnSuccessListener { documentReference ->
+                val documentId = documentReference.id
+                Log.d("PublishPantryForm", "✅ Pantry published successfully!")
+                Log.d("PublishPantryForm", "   - Document ID: $documentId")
+                Log.d("PublishPantryForm", "   - Collection: pantries")
+                Log.d("PublishPantryForm", "   - Owner ID: ${currentUser.uid}")
+                
+                // Verify the document was created by reading it back
+                documentReference.get()
+                    .addOnSuccessListener { document ->
+                        if (document.exists()) {
+                            Log.d("PublishPantryForm", "✅ Document verified in Firestore")
+                            Log.d("PublishPantryForm", "   - Document data: ${document.data}")
+                        } else {
+                            Log.w("PublishPantryForm", "⚠️ Document ID created but document doesn't exist")
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Log.w("PublishPantryForm", "⚠️ Could not verify document: ${e.message}")
+                    }
+                
                 Toast.makeText(this, getString(R.string.toast_pantry_published), Toast.LENGTH_SHORT).show()
                 navigateHome(name, address, startDate, endDate)
             }
             .addOnFailureListener { error ->
                 binding.btnConfirm.isEnabled = true
-                Toast.makeText(this, "Unable to publish pantry. Please try again.", Toast.LENGTH_SHORT).show()
+                Log.e("PublishPantryForm", "❌ Error publishing pantry to Firestore")
+                Log.e("PublishPantryForm", "   - Error type: ${error.javaClass.simpleName}")
+                Log.e("PublishPantryForm", "   - Error message: ${error.message}")
+                Log.e("PublishPantryForm", "   - Collection: pantries")
+                Log.e("PublishPantryForm", "   - Owner ID: ${currentUser.uid}")
+                error.printStackTrace()
+                Toast.makeText(this, "Unable to publish pantry: ${error.message}", Toast.LENGTH_LONG).show()
             }
     }
 
@@ -146,5 +237,7 @@ class PublishPantryFormActivity : AppCompatActivity() {
         const val EXTRA_PANTRY_ADDRESS = "extra_pantry_address"
         const val EXTRA_PANTRY_START_DATE = "extra_pantry_start"
         const val EXTRA_PANTRY_END_DATE = "extra_pantry_end"
+        const val EXTRA_PANTRY_ITEMS = "extra_pantry_items"
+        const val EXTRA_IMAGE_URI_MAP = "extra_image_uri_map"
     }
 }

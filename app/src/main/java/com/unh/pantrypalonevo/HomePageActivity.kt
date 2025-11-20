@@ -57,6 +57,9 @@ class HomePageActivity : AppCompatActivity() {
             intent.putExtra("pantry_name", pantry.name)
             intent.putExtra("pantry_address", pantry.address)
             intent.putExtra("pantry_description", pantry.description)
+            // Pass coordinates if available
+            pantry.latitude?.let { intent.putExtra("pantry_latitude", it) }
+            pantry.longitude?.let { intent.putExtra("pantry_longitude", it) }
             startActivity(intent)
         }
 

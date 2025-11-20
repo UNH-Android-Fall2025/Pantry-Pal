@@ -504,6 +504,52 @@ class PlacesService private constructor(context: Context) {
         return pantryKeywords.any { lowerName.contains(it) }
     }
     
+    /**
+     * Geocode an address to get latitude and longitude
+     * @param address The address to geocode
+     * @return Pair of (latitude, longitude) or null if geocoding fails
+     */
+    suspend fun geocodeAddress(address: String): Pair<Double, Double>? = withContext(Dispatchers.IO) {
+        try {
+            val encodedAddress = java.net.URLEncoder.encode(address, "UTF-8")
+            val url = "https://maps.googleapis.com/maps/api/geocode/json?address=$encodedAddress&key=$apiKey"
+            
+            val client = OkHttpClient()
+            val request = Request.Builder()
+                .url(url)
+                .build()
+            
+            val response = client.newCall(request).execute()
+            val responseBody = response.body?.string()
+            
+            if (response.isSuccessful && responseBody != null) {
+                val json = JSONObject(responseBody)
+                val status = json.getString("status")
+                
+                if (status == "OK") {
+                    val results = json.getJSONArray("results")
+                    if (results.length() > 0) {
+                        val result = results.getJSONObject(0)
+                        val geometry = result.getJSONObject("geometry")
+                        val location = geometry.getJSONObject("location")
+                        val lat = location.getDouble("lat")
+                        val lng = location.getDouble("lng")
+                        
+                        Log.d(TAG, "Geocoded address: $address -> ($lat, $lng)")
+                        return@withContext Pair(lat, lng)
+                    }
+                } else {
+                    Log.e(TAG, "Geocoding failed with status: $status")
+                }
+            }
+            
+            null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error geocoding address: $address", e)
+            null
+        }
+    }
+    
     private fun formatDistance(distanceMeters: Double): String {
         return if (distanceMeters < 1000) {
             "${distanceMeters.toInt()} m"

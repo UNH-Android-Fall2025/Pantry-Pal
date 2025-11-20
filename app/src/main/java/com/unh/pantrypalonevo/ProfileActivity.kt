@@ -150,7 +150,7 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         binding.btnEditProfile.setOnClickListener {
-            showEditUsernameDialog()
+            showEditProfileOptionsDialog()
         }
 
         binding.btnShareProfile.setOnClickListener { shareProfile() }

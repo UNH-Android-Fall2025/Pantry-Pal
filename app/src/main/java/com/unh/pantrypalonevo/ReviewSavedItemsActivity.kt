@@ -101,7 +101,16 @@ class ReviewSavedItemsActivity : AppCompatActivity() {
 		}
 
 		binding.btnPublishPantry.setOnClickListener {
-			startActivity(Intent(this, PublishPantryFormActivity::class.java))
+			val intent = Intent(this, PublishPantryFormActivity::class.java).apply {
+				putParcelableArrayListExtra(PublishPantryFormActivity.EXTRA_PANTRY_ITEMS, ArrayList(savedItems))
+				// Pass image URI map as bundle
+				val bundle = Bundle()
+				imageUriMap.forEach { (key, value) ->
+					bundle.putString(key, value)
+				}
+				putExtra(PublishPantryFormActivity.EXTRA_IMAGE_URI_MAP, bundle)
+			}
+			startActivity(intent)
 		}
 
 		binding.btnDisassemblePantry.setOnClickListener { disassemblePantry() }
