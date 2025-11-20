@@ -31,44 +31,37 @@ class HomePageActivity : AppCompatActivity() {
         binding = ActivityHomePageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // ✅ Load logged-in user's username
         val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
         val username = prefs.getString("user_username", null)
         val displayName = prefs.getString("user_name", "User")
-        
-        // Use username if available, otherwise fallback to display name
+
         val greetingName = if (!username.isNullOrBlank()) {
             username
         } else {
             displayName
         }
-        
+
         binding.tvGreeting.text = "Hello, $greetingName!"
 
-        // ✅ RecyclerView setup
         pantryAdapter = PantryAdapter(pantryList) { pantry ->
-            // On click → open PantryLocationActivity (details)
             val intent = Intent(this, PantryLocationActivity::class.java)
             intent.putExtra("pantry_name", pantry.name)
             intent.putExtra("pantry_address", pantry.address)
             intent.putExtra("pantry_description", pantry.description)
             startActivity(intent)
         }
+
         binding.rvPantryList.layoutManager = LinearLayoutManager(this)
         binding.rvPantryList.adapter = pantryAdapter
 
-        // ✅ Fused location client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // ✅ Load Firestore pantries (fallback to samples if none)
         loadPantries()
 
-        // ✅ Handle location enable card
         binding.btnEnableLocation.setOnClickListener {
             requestLocationPermissionAndFetch()
         }
 
-        // ✅ Search filter
         binding.btnSearch.setOnClickListener {
             val query = binding.etSearch.text.toString().trim()
             if (query.isEmpty()) {
@@ -83,33 +76,28 @@ class HomePageActivity : AppCompatActivity() {
             }
         }
 
-        // ✅ Bottom navigation wiring
         binding.btnHome.setOnClickListener {
-            // already on Home — scroll to top as a UX nicety
             binding.scrollView.smoothScrollTo(0, 0)
         }
+
         binding.btnRecipes.setOnClickListener {
-            // Navigate to Recipes page (or show toast for now)
-            Toast.makeText(this, "Recipes page coming soon!", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, RecipeActivity::class.java)
+            intent.putExtra("product_name", "Potato")
+            startActivity(intent)
         }
+
         binding.btnAdd.setOnClickListener {
-            // Navigate to PublishPantryActivity (add new pantry)
             startActivity(Intent(this, PublishPantryActivity::class.java))
         }
+
         binding.btnPantry.setOnClickListener {
-            // Navigate to Cart
             startActivity(Intent(this, CartActivity::class.java))
         }
+
         binding.btnProfile.setOnClickListener {
-            // open your profile screen
             startActivity(Intent(this, ProfileActivity::class.java))
         }
 
-        // ✅ Launch Pantry Detector (for testing object detection)
-        // You can add a button in the layout or use this as a quick test entry point
-        // For now, you can launch it via ADB: adb shell am start -n com.unh.pantrypalonevo/.PantryDetectorActivity
-
-        // Ensure bottom bar always receives taps (avoid overlap from list)
         binding.bottomNavigation.bringToFront()
         binding.bottomNavigation.isClickable = true
     }
@@ -147,7 +135,6 @@ class HomePageActivity : AppCompatActivity() {
             }
     }
 
-    // === SAMPLE PANTRIES (fallback when Firestore empty/offline) ===
     private fun loadSamplePantries() {
         pantryList.clear()
         pantryList.addAll(
@@ -175,7 +162,6 @@ class HomePageActivity : AppCompatActivity() {
         pantryAdapter.notifyDataSetChanged()
     }
 
-    // === LOCATION PERMISSION & FETCH ===
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) fetchUserLocation()
@@ -200,10 +186,8 @@ class HomePageActivity : AppCompatActivity() {
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location: Location? ->
                 if (location != null) {
-                    // Update location enable card to show success
                     binding.locationEnableCard.alpha = 0.7f
                     Toast.makeText(this, "Location enabled successfully", Toast.LENGTH_SHORT).show()
-                    // You can update the card text here if needed
                 } else {
                     Toast.makeText(this, "Unable to get location", Toast.LENGTH_SHORT).show()
                 }
