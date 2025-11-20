@@ -1,22 +1,38 @@
+@file:Suppress("DEPRECATION")
+
 package com.unh.pantrypalonevo
 
-import android.R
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.unh.pantrypalonevo.databinding.ActivityProfileBinding
 
 class ProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileBinding
     private lateinit var db: FirebaseFirestore
+    private lateinit var storage: FirebaseStorage
+    private var selectedImageUri: Uri? = null
+
+    private val imagePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            selectedImageUri = it
+            uploadProfilePicture(it)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +40,7 @@ class ProfileActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         db = FirebaseFirestore.getInstance()
+        storage = FirebaseStorage.getInstance()
 
         // Ensure bottom bar doesn't block clicks
         binding.bottomNavigation.bringToFront()
@@ -59,9 +76,39 @@ class ProfileActivity : AppCompatActivity() {
         binding.tvPhoneNumber.text =
             savedEmail ?: FirebaseAuth.getInstance().currentUser?.email ?: "No email available"
         
-        // Set user initials in avatar
+        // Load profile picture from Firebase
+        loadProfilePicture()
+        
+        // Set user initials in avatar (fallback if no picture)
         val initials = getInitials(displayText)
         binding.tvUserInitials.text = initials
+    }
+    
+    private fun loadProfilePicture() {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser == null) return
+        
+        db.collection("users").document(currentUser.uid).get()
+            .addOnSuccessListener { document ->
+                val profilePictureUrl = document.getString("profilePictureUrl")
+                if (!profilePictureUrl.isNullOrBlank()) {
+                    // Load image with Glide
+                    Glide.with(this)
+                        .load(profilePictureUrl)
+                        .circleCrop()
+                        .into(binding.ivProfilePicture)
+                    binding.ivProfilePicture.visibility = android.view.View.VISIBLE
+                    binding.tvUserInitials.visibility = android.view.View.GONE
+                } else {
+                    binding.ivProfilePicture.visibility = android.view.View.GONE
+                    binding.tvUserInitials.visibility = android.view.View.VISIBLE
+                }
+            }
+            .addOnFailureListener {
+                // If Firestore fails, show initials
+                binding.ivProfilePicture.visibility = android.view.View.GONE
+                binding.tvUserInitials.visibility = android.view.View.VISIBLE
+            }
     }
     
     private fun getInitials(name: String): String {
@@ -86,9 +133,14 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // Edit avatar button - same as edit profile
+        // Edit avatar button - show options for editing username or picture
         binding.btnEditAvatar.setOnClickListener {
-            showEditUsernameDialog()
+            showEditProfileOptionsDialog()
+        }
+        
+        // Profile avatar click - also opens edit options
+        binding.ivProfileAvatar.setOnClickListener {
+            showEditProfileOptionsDialog()
         }
 
         binding.btnPantryCode.setOnClickListener { showPantryCodeDialog() }
@@ -134,12 +186,15 @@ class ProfileActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Logout")
             .setMessage("Are you sure you want to logout?")
-            .setIcon(R.drawable.ic_dialog_alert)
-            .setPositiveButton("Yes, Logout") { _, _ -> performLogout() }
+            .setIcon(R.drawable.ic_logout)
+            .setPositiveButton("Yes, Logout") { dialog: android.content.DialogInterface, _: Int -> 
+                performLogout()
+            }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
+    @Suppress("DEPRECATION")
     private fun performLogout() {
         FirebaseAuth.getInstance().signOut()
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -179,6 +234,86 @@ class ProfileActivity : AppCompatActivity() {
         )
     }
 
+    private fun showEditProfileOptionsDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_edit_profile, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+        
+        // Make dialog background transparent to show custom layout
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        
+        // Edit Username button
+        dialogView.findViewById<androidx.cardview.widget.CardView>(R.id.btnEditUsername)
+            .setOnClickListener {
+                dialog.dismiss()
+                showEditUsernameDialog()
+            }
+        
+        // Change Profile Picture button
+        dialogView.findViewById<androidx.cardview.widget.CardView>(R.id.btnChangePicture)
+            .setOnClickListener {
+                dialog.dismiss()
+                pickProfilePicture()
+            }
+        
+        // Cancel button
+        dialogView.findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btnCancel)
+            .setOnClickListener {
+                dialog.dismiss()
+            }
+        
+        dialog.show()
+    }
+    
+    private fun pickProfilePicture() {
+        imagePickerLauncher.launch("image/*")
+    }
+    
+    private fun uploadProfilePicture(imageUri: Uri) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser == null) {
+            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        Toast.makeText(this, "Uploading profile picture...", Toast.LENGTH_SHORT).show()
+        
+        // Create reference to profile picture in Firebase Storage
+        val storageRef = storage.reference
+        val profilePictureRef = storageRef.child("profile_pictures/${currentUser.uid}.jpg")
+        
+        // Upload the image
+        profilePictureRef.putFile(imageUri)
+            .addOnSuccessListener { taskSnapshot ->
+                // Get download URL
+                taskSnapshot.storage.downloadUrl.addOnSuccessListener { uri ->
+                    val downloadUrl = uri.toString()
+                    
+                    // Update Firestore with profile picture URL
+                    db.collection("users").document(currentUser.uid)
+                        .update("profilePictureUrl", downloadUrl)
+                        .addOnSuccessListener {
+                            // Update local display
+                            Glide.with(this)
+                                .load(downloadUrl)
+                                .circleCrop()
+                                .into(binding.ivProfilePicture)
+                            binding.ivProfilePicture.visibility = android.view.View.VISIBLE
+                            binding.tvUserInitials.visibility = android.view.View.GONE
+                            
+                            Toast.makeText(this, "Profile picture updated successfully!", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Error updating profile: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error uploading image: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+    
     private fun showEditUsernameDialog() {
         val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
         val currentUsername = prefs.getString("user_username", "") ?: ""

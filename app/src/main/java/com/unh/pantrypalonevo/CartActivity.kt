@@ -1,6 +1,7 @@
 package com.unh.pantrypalonevo
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -30,7 +31,7 @@ class CartActivity : AppCompatActivity() {
         cartAdapter = CartAdapter(
             cartItems = cartItems,
             onQuantityChanged = { _, _ ->
-                updateTotals()
+                // Quantity changed - no price to update
             },
             onItemDeleted = { item ->
                 removeItemFromCart(item)
@@ -82,7 +83,12 @@ class CartActivity : AppCompatActivity() {
     }
 
     private fun loadCartItems() {
-        val itemsFromIntent = intent.getParcelableArrayListExtra<CartItem>("cart_items")
+        val itemsFromIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayListExtra("cart_items", CartItem::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableArrayListExtra<CartItem>("cart_items")
+        }
 
         if (itemsFromIntent != null && itemsFromIntent.isNotEmpty()) {
             cartItems.clear()
@@ -98,14 +104,7 @@ class CartActivity : AppCompatActivity() {
     }
 
     private fun updateUI() {
-        updateTotals()
         updateEmptyState()
-    }
-
-    private fun updateTotals() {
-        val subtotal = cartItems.sumOf { it.getTotalPrice() }
-        binding.tvSubtotalAmount.text = String.format("$%.2f", subtotal)
-        binding.tvTotalAmount.text = String.format("$%.2f", subtotal)
     }
 
     private fun updateEmptyState() {

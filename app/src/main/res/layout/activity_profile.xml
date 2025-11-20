@@ -79,13 +79,21 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp">
 
-                        <LinearLayout
+                        <FrameLayout
                             android:id="@+id/ivProfileAvatar"
                             android:layout_width="96dp"
                             android:layout_height="96dp"
                             android:background="@drawable/primary_container_light"
-                            android:gravity="center"
-                            android:orientation="vertical">
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <ImageView
+                                android:id="@+id/ivProfilePicture"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:visibility="gone"
+                                android:contentDescription="Profile picture" />
 
                             <TextView
                                 android:id="@+id/tvUserInitials"
@@ -94,9 +102,10 @@
                                 android:text="AD"
                                 android:textSize="36sp"
                                 android:textStyle="bold"
-                                android:textColor="#4CAF50" />
+                                android:textColor="#4CAF50"
+                                android:layout_gravity="center" />
 
-                        </LinearLayout>
+                        </FrameLayout>
 
                         <FrameLayout
                             android:layout_width="36dp"

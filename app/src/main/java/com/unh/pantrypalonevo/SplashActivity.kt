@@ -40,6 +40,12 @@ class SplashActivity : AppCompatActivity() {
         }
     }
     
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        // Disable back button during splash
+        // Do nothing
+    }
+    
     private fun hideSystemBars() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val controller = WindowInsetsControllerCompat(window, window.decorView)
@@ -191,11 +197,5 @@ class SplashActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }, SPLASH_DELAY)
-    }
-    
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        // Disable back button during splash
-        // Do nothing
     }
 }

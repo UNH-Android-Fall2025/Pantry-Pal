@@ -22,6 +22,13 @@ class FingerprintActivity : AppCompatActivity() {
         // No UI layout - just show fingerprint prompt immediately
         setupBiometric()
         showBiometricPrompt()
+        
+        // Handle back button press - prevent going back, force authentication
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Do nothing - force authentication
+            }
+        })
     }
 
     private fun setupBiometric() {
@@ -32,25 +39,80 @@ class FingerprintActivity : AppCompatActivity() {
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    // User cancelled or error - go to login screen
-                    Toast.makeText(applicationContext,
-                        "Authentication required", Toast.LENGTH_SHORT).show()
-                    goToLogin()
+                    
+                    // Check if user clicked "Use password instead" button
+                    if (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON || 
+                        errorCode == BiometricPrompt.ERROR_USER_CANCELED) {
+                        // User wants to use password - navigate to login page
+                        runOnUiThread {
+                            if (!isFinishing && !isDestroyed) {
+                                try {
+                                    goToLogin()
+                                } catch (e: Exception) {
+                                    // Fallback navigation if error occurs
+                                    try {
+                                        val intent = Intent(this@FingerprintActivity, SimpleLoginActivity::class.java)
+                                        startActivity(intent)
+                                        finish()
+                                    } catch (ex: Exception) {
+                                        // If all else fails, just finish
+                                        finish()
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Other errors - still navigate to login
+                        runOnUiThread {
+                            if (!isFinishing && !isDestroyed) {
+                                try {
+                                    Toast.makeText(applicationContext,
+                                        "Authentication required", Toast.LENGTH_SHORT).show()
+                                    goToLogin()
+                                } catch (e: Exception) {
+                                    finish()
+                                }
+                            }
+                        }
+                    }
                 }
 
                 override fun onAuthenticationSucceeded(
                     result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
                     // Fingerprint success - go to home
-                    Toast.makeText(applicationContext,
-                        "Welcome back!", Toast.LENGTH_SHORT).show()
-                    goToHome()
+                    runOnUiThread {
+                        if (!isFinishing && !isDestroyed) {
+                            try {
+                                Toast.makeText(applicationContext,
+                                    "Welcome back!", Toast.LENGTH_SHORT).show()
+                                goToHome()
+                            } catch (e: Exception) {
+                                // Fallback navigation
+                                try {
+                                    val intent = Intent(this@FingerprintActivity, HomePageActivity::class.java)
+                                    startActivity(intent)
+                                    finish()
+                                } catch (ex: Exception) {
+                                    finish()
+                                }
+                            }
+                        }
+                    }
                 }
 
                 override fun onAuthenticationFailed() {
                     super.onAuthenticationFailed()
-                    Toast.makeText(applicationContext,
-                        "Try again", Toast.LENGTH_SHORT).show()
+                    runOnUiThread {
+                        if (!isFinishing && !isDestroyed) {
+                            try {
+                                Toast.makeText(applicationContext,
+                                    "Try again", Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                // Ignore toast errors
+                            }
+                        }
+                    }
                 }
             })
 
@@ -76,20 +138,41 @@ class FingerprintActivity : AppCompatActivity() {
 
 
     private fun goToHome() {
-        startActivity(Intent(this, HomePageActivity::class.java))
-        finish()
+        try {
+            val intent = Intent(this, HomePageActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        } catch (e: Exception) {
+            // If navigation fails, try without flags
+            try {
+                val intent = Intent(this, HomePageActivity::class.java)
+                startActivity(intent)
+                finish()
+            } catch (ex: Exception) {
+                finish()
+            }
+        }
     }
 
     private fun goToLogin() {
-        // Log out user and go to login
-        FirebaseAuth.getInstance().signOut()
-        startActivity(Intent(this, LoginActivity::class.java))
-        finish()
+        // Navigate to default login page (SimpleLoginActivity)
+        try {
+            val intent = Intent(this, SimpleLoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        } catch (e: Exception) {
+            // If navigation fails, try without flags
+            try {
+                val intent = Intent(this, SimpleLoginActivity::class.java)
+                startActivity(intent)
+                finish()
+            } catch (ex: Exception) {
+                // Last resort - just finish
+                finish()
+            }
+        }
     }
 
-    // Prevent back button
-    override fun onBackPressed() {
-        super.onBackPressed()
-        // Do nothing - force authentication
-    }
 }

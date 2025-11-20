@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.unh.pantrypalonevo
 
 import android.content.Intent
@@ -5,6 +7,7 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
@@ -25,7 +28,36 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var executor: Executor
     private var fingerprintEnabled = false
     private var fingerprintFailCount = 0
-    private val RC_SIGN_IN = 9001
+    
+    private val googleSignInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        when (result.resultCode) {
+            RESULT_OK -> {
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                try {
+                    val account = task.getResult(ApiException::class.java)
+                    firebaseAuthWithGoogle(account?.idToken)
+                } catch (e: ApiException) {
+                    Log.w("LoginActivity", "Google sign in failed", e)
+                    when (e.statusCode) {
+                        12501 -> Toast.makeText(this, "Google Sign-In cancelled by user", Toast.LENGTH_SHORT).show()
+                        7 -> Toast.makeText(this, "Network error. Please check your internet connection", Toast.LENGTH_LONG).show()
+                        8 -> Toast.makeText(this, "Internal error. Please try again", Toast.LENGTH_LONG).show()
+                        10 -> Toast.makeText(this, "Developer error. Please contact support", Toast.LENGTH_LONG).show()
+                        else -> Toast.makeText(this, "Google Sign-In failed: ${e.message} (Code: ${e.statusCode})", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            RESULT_CANCELED -> {
+                Toast.makeText(this, "Google Sign-In was cancelled", Toast.LENGTH_SHORT).show()
+            }
+            else -> {
+                Toast.makeText(this, "Google Sign-In failed with result code: ${result.resultCode}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +86,7 @@ class LoginActivity : AppCompatActivity() {
 
             googleButton.setOnClickListener {
                 val signInIntent = googleSignInClient.signInIntent
-                startActivityForResult(signInIntent, RC_SIGN_IN)
+                googleSignInLauncher.launch(signInIntent)
             }
 
             fingerprintEnabled = intent.getBooleanExtra("fingerprint_enabled", false)
@@ -126,19 +158,6 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == RC_SIGN_IN) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                firebaseAuthWithGoogle(account?.idToken)
-            } catch (e: ApiException) {
-                Log.w("LoginActivity", "Google sign in failed", e)
-                Toast.makeText(this, "Google Sign-In failed: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 
     private fun firebaseAuthWithGoogle(idToken: String?) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)

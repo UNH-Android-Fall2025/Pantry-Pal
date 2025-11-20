@@ -2,9 +2,9 @@ package com.unh.pantrypalonevo
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.os.Build
 import android.util.Log
 import android.view.View
@@ -44,13 +44,18 @@ class PublishPantryActivity : AppCompatActivity() {
     ) { uri: Uri? ->
         uri?.let {
             try {
-                val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, it)
-                capturedImageBitmap = bitmap
-                capturedImageUri = it
-                binding.ivPreview.setImageBitmap(bitmap)
-                updateImagePreviewVisibility()
-                clearDetectedProducts()
-                detectProducts(bitmap)
+                // Use modern API instead of deprecated MediaStore.Images.Media.getBitmap()
+                contentResolver.openInputStream(it)?.use { stream ->
+                    val bitmap = BitmapFactory.decodeStream(stream)
+                    capturedImageBitmap = bitmap
+                    capturedImageUri = it
+                    binding.ivPreview.setImageBitmap(bitmap)
+                    updateImagePreviewVisibility()
+                    clearDetectedProducts()
+                    detectProducts(bitmap)
+                } ?: run {
+                    Toast.makeText(this, "Error loading image", Toast.LENGTH_SHORT).show()
+                }
             } catch (e: Exception) {
                 Toast.makeText(this, "Error loading image", Toast.LENGTH_SHORT).show()
                 Log.e("PublishPantry", "Gallery image error", e)
@@ -486,10 +491,10 @@ class PublishPantryActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.dialog_item_not_detected_title))
             .setMessage(getString(R.string.dialog_item_not_detected_message))
-            .setPositiveButton(getString(android.R.string.yes)) { _, _ ->
+            .setPositiveButton("Yes") { _, _ ->
                 proceedManually()
             }
-            .setNegativeButton(getString(android.R.string.no), null)
+            .setNegativeButton("No", null)
             .show()
     }
 

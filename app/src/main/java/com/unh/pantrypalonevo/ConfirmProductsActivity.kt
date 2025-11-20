@@ -1,6 +1,7 @@
 package com.unh.pantrypalonevo
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -18,8 +19,14 @@ class ConfirmProductsActivity : AppCompatActivity() {
         binding = ActivityConfirmProductsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        detectedProducts = intent.getParcelableArrayListExtra("detected_products")
-            ?: arrayListOf()
+        detectedProducts = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayListExtra("detected_products", DetectedProduct::class.java)
+                ?: arrayListOf()
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableArrayListExtra<DetectedProduct>("detected_products")
+                ?: arrayListOf()
+        }
 
         setupRecyclerView()
         setupButtons()

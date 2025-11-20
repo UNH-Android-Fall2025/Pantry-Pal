@@ -62,17 +62,6 @@
                 android:textColor="#757575"
                 android:layout_marginTop="4dp" />
 
-            <!-- Price -->
-            <TextView
-                android:id="@+id/tvPrice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="$0.00"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="#4CAF50"
-                android:layout_marginTop="4dp" />
-
         </LinearLayout>
 
         <!-- Trash Icon Button (Top-Right) -->

@@ -1,5 +1,6 @@
 package com.unh.pantrypalonevo
 
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -22,9 +23,13 @@ class ReviewProductsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // Get products from intent
-        productList.addAll(
-            intent.getParcelableArrayListExtra("products") ?: emptyList()
-        )
+        val products = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayListExtra("products", DetectedProduct::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableArrayListExtra<DetectedProduct>("products")
+        }
+        productList.addAll(products ?: emptyList())
 
         setupRecyclerView()
         setupClickListeners()

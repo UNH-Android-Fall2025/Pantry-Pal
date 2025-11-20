@@ -32,7 +32,6 @@ class SimpleLoginActivity : AppCompatActivity() {
     private lateinit var etPassword: EditText
     private lateinit var btnLogin: Button
     private lateinit var btnGoogleSignIn: LinearLayout
-    private lateinit var btnFacebookSignIn: LinearLayout
     private lateinit var btnTogglePassword: ImageButton
     private lateinit var tvForgotPassword: TextView
     private lateinit var tvSignUp: TextView
@@ -56,6 +55,8 @@ class SimpleLoginActivity : AppCompatActivity() {
                     val account = task.getResult(ApiException::class.java)
                     if (account != null && account.idToken != null) {
                         Toast.makeText(this, "Google Sign-In successful, authenticating...", Toast.LENGTH_SHORT).show()
+                        // Save Google account info before Firebase auth
+                        saveGoogleAccountInfo(account)
                         firebaseAuthWithGoogle(account.idToken)
                     } else {
                         Toast.makeText(this, "Google Sign-In failed: No account data or ID token", Toast.LENGTH_SHORT).show()
@@ -90,7 +91,6 @@ class SimpleLoginActivity : AppCompatActivity() {
             etPassword = findViewById(R.id.etPassword)
             btnLogin = findViewById(R.id.btnLogin)
             btnGoogleSignIn = findViewById(R.id.btnGoogleSignIn)
-            btnFacebookSignIn = findViewById(R.id.btnFacebookSignIn)
             btnTogglePassword = findViewById(R.id.btnTogglePassword)
             tvForgotPassword = findViewById(R.id.tvForgotPassword)
             tvSignUp = findViewById(R.id.tvSignUp)
@@ -98,7 +98,7 @@ class SimpleLoginActivity : AppCompatActivity() {
             
             // Check if all views are found
             if (etEmail == null || etPassword == null || btnLogin == null || 
-                btnGoogleSignIn == null || btnFacebookSignIn == null || btnTogglePassword == null ||
+                btnGoogleSignIn == null || btnTogglePassword == null ||
                 tvForgotPassword == null || tvSignUp == null || tvUseDifferentEmail == null) {
                 Toast.makeText(this, "Login screen setup failed", Toast.LENGTH_SHORT).show()
                 finish()
@@ -245,11 +245,6 @@ class SimpleLoginActivity : AppCompatActivity() {
             startActivity(Intent(this, SignUpActivity::class.java))
         }
         
-        btnFacebookSignIn.setOnClickListener {
-            // Facebook sign-in functionality - placeholder for now
-            Toast.makeText(this, "Facebook sign-in coming soon!", Toast.LENGTH_SHORT).show()
-        }
-        
         tvUseDifferentEmail.setOnClickListener {
             // Reset to allow email editing
             etEmail.isEnabled = true
@@ -262,6 +257,22 @@ class SimpleLoginActivity : AppCompatActivity() {
         }
     }
     
+    
+    private fun saveGoogleAccountInfo(account: com.google.android.gms.auth.api.signin.GoogleSignInAccount) {
+        val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+        
+        // Get username from Google account (displayName or email)
+        val googleUsername = account.displayName ?: account.email?.substringBefore("@") ?: ""
+        val googlePhotoUrl = account.photoUrl?.toString() ?: ""
+        
+        // Save Google account info
+        if (googleUsername.isNotEmpty()) {
+            prefs.edit()
+                .putString("google_username", googleUsername)
+                .putString("google_photo_url", googlePhotoUrl)
+                .apply()
+        }
+    }
     
     private fun firebaseAuthWithGoogle(idToken: String?) {
         if (idToken == null) {
@@ -297,30 +308,68 @@ class SimpleLoginActivity : AppCompatActivity() {
                 .putBoolean("has_logged_in_before", true)
                 .apply()
             
-            // Check if user has a username, if not generate one
+            // Check if user has a username, if not use Google username or generate one
             val currentUser = FirebaseAuth.getInstance().currentUser
             if (currentUser != null) {
                 val db = FirebaseFirestore.getInstance()
+                val googleUsername = sharedPref.getString("google_username", "") ?: ""
+                val googlePhotoUrl = sharedPref.getString("google_photo_url", "") ?: ""
+                
                 db.collection("users").document(currentUser.uid).get()
                     .addOnSuccessListener { document ->
-                        val username = document.getString("username")
-                        if (username.isNullOrBlank()) {
-                            // Generate and save username for existing user
-                            val newUsername = "User${System.currentTimeMillis().toString().takeLast(6)}"
+                        val existingUsername = document.getString("username")
+                        val existingPhotoUrl = document.getString("profilePictureUrl")
+                        
+                        // Use Google username if available and no existing username
+                        val usernameToUse = when {
+                            !existingUsername.isNullOrBlank() -> existingUsername
+                            googleUsername.isNotEmpty() -> {
+                                // Clean Google username (remove spaces, make it valid)
+                                googleUsername.replace(" ", "_").take(20)
+                            }
+                            else -> "User${System.currentTimeMillis().toString().takeLast(6)}"
+                        }
+                        
+                        // Use Google photo URL if available and no existing photo
+                        val photoUrlToUse = existingPhotoUrl ?: googlePhotoUrl
+                        
+                        // Update Firebase with username and photo
+                        val updates = mutableMapOf<String, Any>()
+                        if (existingUsername.isNullOrBlank()) {
+                            updates["username"] = usernameToUse
+                        }
+                        if (photoUrlToUse.isNotEmpty() && existingPhotoUrl.isNullOrBlank()) {
+                            updates["profilePictureUrl"] = photoUrlToUse
+                        }
+                        
+                        if (updates.isNotEmpty()) {
                             db.collection("users").document(currentUser.uid)
-                                .update("username", newUsername)
+                                .update(updates)
                                 .addOnSuccessListener {
                                     sharedPref.edit()
-                                        .putString("user_username", newUsername)
-                                        .putString("user_name", newUsername) // Use username as primary display name
+                                        .putString("user_username", usernameToUse)
+                                        .putString("user_name", usernameToUse)
                                         .apply()
                                 }
                         } else {
+                            // Just load existing data
                             sharedPref.edit()
-                                .putString("user_username", username)
-                                .putString("user_name", username) // Use username as primary display name
+                                .putString("user_username", existingUsername ?: usernameToUse)
+                                .putString("user_name", existingUsername ?: usernameToUse)
                                 .apply()
                         }
+                    }
+                    .addOnFailureListener {
+                        // If Firestore fails, use Google username or generate
+                        val usernameToUse = if (googleUsername.isNotEmpty()) {
+                            googleUsername.replace(" ", "_").take(20)
+                        } else {
+                            "User${System.currentTimeMillis().toString().takeLast(6)}"
+                        }
+                        sharedPref.edit()
+                            .putString("user_username", usernameToUse)
+                            .putString("user_name", usernameToUse)
+                            .apply()
                     }
             }
             

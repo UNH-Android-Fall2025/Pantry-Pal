@@ -30,7 +30,6 @@ class CartAdapter(
 
         with(holder.binding) {
             tvItemName.text = item.name
-            tvItemPrice.text = "$${item.price}"
             tvQuantity.text = item.quantity.toString()
 
             Glide.with(ivItemImage.context)
