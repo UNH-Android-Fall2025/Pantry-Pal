@@ -6,11 +6,39 @@ import androidx.recyclerview.widget.RecyclerView
 import com.unh.pantrypalonevo.databinding.ItemRecipeBinding
 
 class RecipeAdapter(
-    private val recipes: List<Recipe>
+    private val recipes: MutableList<Recipe>
 ) : RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder>() {
+    
+    var onRecipeClick: ((Recipe) -> Unit)? = null
+    
+    fun updateRecipes(newRecipes: List<Recipe>) {
+        recipes.clear()
+        recipes.addAll(newRecipes)
+        notifyDataSetChanged()
+    }
 
     inner class RecipeViewHolder(val binding: ItemRecipeBinding) :
-        RecyclerView.ViewHolder(binding.root)
+        RecyclerView.ViewHolder(binding.root) {
+        
+        fun bind(recipe: Recipe) {
+            binding.tvTitle.text = recipe.title
+            binding.tvTime.text = "⏱ ${recipe.time}"
+            binding.tvDifficulty.text = "📊 ${recipe.difficulty}"
+            
+            // Show first 3-4 ingredients as preview
+            val ingredientsPreview = if (recipe.ingredients.size > 3) {
+                recipe.ingredients.take(3).joinToString(", ") + " +${recipe.ingredients.size - 3} more"
+            } else {
+                recipe.ingredients.joinToString(", ")
+            }
+            binding.tvIngredients.text = "Ingredients: $ingredientsPreview"
+            
+            // Set click listener
+            binding.cardRecipe.setOnClickListener {
+                onRecipeClick?.invoke(recipe)
+            }
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecipeViewHolder {
         val binding = ItemRecipeBinding.inflate(
@@ -22,15 +50,7 @@ class RecipeAdapter(
     }
 
     override fun onBindViewHolder(holder: RecipeViewHolder, position: Int) {
-        val recipe = recipes[position]
-
-        holder.binding.tvTitle.text = recipe.title
-        holder.binding.tvTime.text = "Time: ${recipe.time}"
-        holder.binding.tvDifficulty.text = "Difficulty: ${recipe.difficulty}"
-        holder.binding.tvIngredients.text =
-            "Ingredients: ${recipe.ingredients.joinToString(", ")}"
-        holder.binding.tvSteps.text =
-            "Steps:\n${recipe.steps.joinToString("\n")}"
+        holder.bind(recipes[position])
     }
 
     override fun getItemCount(): Int = recipes.size

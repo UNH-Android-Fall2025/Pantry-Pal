@@ -67,7 +67,14 @@ class CartActivity : AppCompatActivity() {
         }
 
         binding.btnRecipes.setOnClickListener {
-            Toast.makeText(this, "Recipes page coming soon!", Toast.LENGTH_SHORT).show()
+            if (cartItems.isEmpty()) {
+                Toast.makeText(this, "Add items to cart to generate recipes", Toast.LENGTH_SHORT).show()
+            } else {
+                // Pass cart items to RecipeActivity
+                val intent = Intent(this, RecipeActivity::class.java)
+                intent.putParcelableArrayListExtra("cart_items", ArrayList(cartItems))
+                startActivity(intent)
+            }
         }
 
         binding.btnCart.setOnClickListener {

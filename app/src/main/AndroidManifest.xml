@@ -59,6 +59,10 @@
         <activity
             android:name=".RecipeActivity"
             android:exported="false" />
+        <activity
+            android:name=".RecipeDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".RecipeActivity" />
 
         <!-- Pantry Related Activities -->
         <activity android:name=".PublishPantryActivity" />

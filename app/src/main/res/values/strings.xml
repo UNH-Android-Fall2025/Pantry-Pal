@@ -46,4 +46,7 @@
 	
 	<!-- Google Places API Key -->
 	<string name="google_places_api_key">AIzaSyB3ZDCuXZ04C1QI5LdNqcoSEu-r4G79o9M</string>
+	
+	<!-- DeepSeek API Key -->
+	<string name="deepseek_api_key">sk-58ce2884081a403e8b3faa55f85902ad</string>
 </resources>

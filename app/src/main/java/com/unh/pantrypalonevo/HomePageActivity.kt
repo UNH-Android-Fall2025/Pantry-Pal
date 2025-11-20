@@ -113,9 +113,8 @@ class HomePageActivity : AppCompatActivity() {
         }
 
         binding.btnRecipes.setOnClickListener {
-            val intent = Intent(this, RecipeActivity::class.java)
-            intent.putExtra("product_name", "Potato")
-            startActivity(intent)
+            // Get items from cart or allow user to select items
+            openRecipeActivity()
         }
 
         binding.btnAdd.setOnClickListener {
@@ -174,7 +173,7 @@ class HomePageActivity : AppCompatActivity() {
                     android.util.Log.e("HomePageActivity", "Firestore load failed", it)
                     fetchPlacesPantries(emptyList())
                 }
-        } else {
+                } else {
             // No location yet - try Firestore only, or wait for location
             firestore.collection("pantries")
                 .get()
@@ -200,8 +199,8 @@ class HomePageActivity : AppCompatActivity() {
                         )
                     }
                     displayPantries(loadedPantries)
-                }
-                .addOnFailureListener {
+            }
+            .addOnFailureListener {
                     // No location and Firestore failed - show empty state
                     displayPantries(emptyList())
                     Toast.makeText(this, "Please enable location to find nearby pantries", Toast.LENGTH_LONG).show()
@@ -391,6 +390,30 @@ class HomePageActivity : AppCompatActivity() {
     }
     
     /**
+     * Open RecipeActivity with items from cart or prompt user to select items
+     */
+    private fun openRecipeActivity() {
+        // Try to get items from SharedPreferences (cart items might be stored there)
+        val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+        val cartItemsJson = prefs.getString("cart_items_json", null)
+        
+        val intent = Intent(this, RecipeActivity::class.java)
+        
+        // If we have cart items stored, pass them
+        if (!cartItemsJson.isNullOrBlank()) {
+            try {
+                // For now, just pass a message - user can select items in RecipeActivity
+                intent.putExtra("items_string", cartItemsJson)
+            } catch (e: Exception) {
+                android.util.Log.e("HomePageActivity", "Error parsing cart items", e)
+            }
+        }
+        
+        // If no items, RecipeActivity will prompt user or use default
+        startActivity(intent)
+    }
+    
+    /**
      * Search Google Places API using user's search query
      */
     private fun searchPlacesByQuery(query: String, localResults: List<Pantry>) {
@@ -421,7 +444,7 @@ class HomePageActivity : AppCompatActivity() {
                             distanceMeters = distanceMeters,
                             distance = formatDistance(distanceMeters)
                         )
-                    } else {
+                } else {
                         pantry
                     }
                 }
