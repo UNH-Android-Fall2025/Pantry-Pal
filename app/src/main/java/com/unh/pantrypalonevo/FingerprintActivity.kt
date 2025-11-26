@@ -19,7 +19,6 @@ class FingerprintActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // No UI layout - just show fingerprint prompt immediately
         setupBiometric()
         showBiometricPrompt()
         
@@ -62,7 +61,6 @@ class FingerprintActivity : AppCompatActivity() {
                             }
                         }
                     } else {
-                        // Other errors - still navigate to login
                         runOnUiThread {
                             if (!isFinishing && !isDestroyed) {
                                 try {
@@ -80,7 +78,6 @@ class FingerprintActivity : AppCompatActivity() {
                 override fun onAuthenticationSucceeded(
                     result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    // Fingerprint success - go to home
                     runOnUiThread {
                         if (!isFinishing && !isDestroyed) {
                             try {
