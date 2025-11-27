@@ -30,7 +30,7 @@ class HomePageActivity : AppCompatActivity() {
     private val firestore by lazy { FirebaseFirestore.getInstance() }
     private var userLocation: Location? = null
     private lateinit var placesService: PlacesService
-
+   //usage
     companion object {
         private const val NEARBY_RADIUS_METERS = 50_000.0 // 50 km
     }
