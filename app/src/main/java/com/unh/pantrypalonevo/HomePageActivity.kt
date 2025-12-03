@@ -31,6 +31,7 @@ class HomePageActivity : AppCompatActivity() {
     private var userLocation: Location? = null
     private lateinit var placesService: PlacesService
    //usage
+    //green
     companion object {
         private const val NEARBY_RADIUS_METERS = 50_000.0 // 50 km
     }
