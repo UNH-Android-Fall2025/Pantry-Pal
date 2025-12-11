@@ -27,4 +27,8 @@
     <color name="google_blue">#4285F4</color>
     <color name="input_background">#F8F9FA</color>
     <color name="card_shadow">#1A000000</color>
+    
+    <!-- Brand Green Color -->
+    <color name="brand_green">#33E67A</color>
+    <color name="brand_green_dark">#2BC465</color>
 </resources>
