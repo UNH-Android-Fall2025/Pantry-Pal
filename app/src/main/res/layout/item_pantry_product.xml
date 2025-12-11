@@ -4,11 +4,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="24dp"
+    android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="8dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="#F6F8F7">
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,64 +17,54 @@
         android:padding="16dp"
         android:gravity="center_vertical">
 
-        <!-- Icon Container -->
-        <FrameLayout
+        <!-- Checkbox -->
+        <CheckBox
+            android:id="@+id/cbSelect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:buttonTint="@color/brand_green" />
+
+        <!-- Product Image -->
+        <ImageView
+            android:id="@+id/ivProductImage"
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:layout_marginEnd="16dp"
+            android:scaleType="centerCrop"
             android:background="@drawable/rounded_green_icon_bg"
-            android:gravity="center">
+            android:contentDescription="Product image"
+            android:layout_marginEnd="16dp" />
 
-            <ImageView
-                android:id="@+id/ivPantryIcon"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_gravity="center"
-                android:src="@drawable/bakery_dining_24"
-                android:contentDescription="Pantry icon" />
-
-        </FrameLayout>
-
-        <!-- Main Content -->
+        <!-- Product Info -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_vertical">
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tvPantryName"
+                android:id="@+id/tvProductName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Community Bread Basket"
+                android:text="Product Name"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="#121212"
                 android:layout_marginBottom="4dp" />
 
             <TextView
-                android:id="@+id/tvPantryLocation"
+                android:id="@+id/tvProductDescription"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="123 Main Street, Anytown"
+                android:text="Product description"
                 android:textSize="14sp"
-                android:textColor="#757575" />
+                android:textColor="#757575"
+                android:maxLines="2"
+                android:ellipsize="end" />
 
         </LinearLayout>
-
-        <!-- Distance -->
-        <TextView
-            android:id="@+id/tvDistance"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0.5 mi"
-            android:textSize="14sp"
-            android:textStyle="normal"
-            android:textColor="#757575"
-            android:layout_marginStart="8dp"
-            android:gravity="center_vertical" />
 
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>
+

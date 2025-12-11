@@ -2,6 +2,11 @@
     <color name="button_bg">#FFFFFF</color> <!-- or lighter gray for dark theme -->
     <color name="button_text">#000000</color> <!-- Black text for light button -->
     <!-- Brand Green Color (same for dark theme) -->
-    <color name="brand_green">#33E67A</color>
-    <color name="brand_green_dark">#2BC465</color>
+    <color name="brand_green">#4CAE4F</color>
+    <color name="brand_green_dark">#3E8E41</color>
+    <color name="brand_green_light">#6BC66E</color>
+    
+    <!-- Primary Color (alias for brand_green) -->
+    <color name="colorPrimary">#4CAE4F</color>
+    <color name="primary">#4CAE4F</color>
 </resources>

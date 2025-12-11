@@ -90,7 +90,7 @@
                 android:text="View Recipe →"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#4CAF50"
+                android:textColor="@color/brand_green"
                 android:layout_marginTop="8dp" />
         </LinearLayout>
     </LinearLayout>

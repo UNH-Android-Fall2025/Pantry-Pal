@@ -79,7 +79,7 @@
                 android:layout_marginStart="8dp"
                 android:text="✓ Add All"
                 android:textColor="#FFFFFF"
-                android:backgroundTint="#4CAF50"
+                android:backgroundTint="@color/brand_green"
                 android:enabled="false" />
         </LinearLayout>
     </LinearLayout>

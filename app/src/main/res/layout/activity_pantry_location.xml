@@ -78,7 +78,7 @@
         android:drawableStart="@android:drawable/ic_menu_mylocation"
         android:drawablePadding="8dp"
         android:padding="16dp"
-        android:backgroundTint="#4CAF50"
+        android:backgroundTint="@color/brand_green"
         android:textColor="@android:color/white" />
 
 </LinearLayout>

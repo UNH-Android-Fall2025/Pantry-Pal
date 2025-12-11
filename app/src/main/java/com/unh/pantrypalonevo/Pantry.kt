@@ -7,5 +7,7 @@ data class Pantry(
     val distance: String = "",
     val latitude: Double? = null,
     val longitude: Double? = null,
-    val distanceMeters: Double? = null
+    val distanceMeters: Double? = null,
+    val zipCode: String? = null,
+    val pantryId: String? = null
 )

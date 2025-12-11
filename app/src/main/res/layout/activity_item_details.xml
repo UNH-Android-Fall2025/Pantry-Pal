@@ -224,7 +224,7 @@
             android:text="Add another item to pantry"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#4CAF50"
+            android:textColor="@color/brand_green"
             android:background="@drawable/rounded_button_bordered"
             android:backgroundTint="@android:color/transparent"
             android:letterSpacing="0.015"
@@ -240,7 +240,7 @@
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:background="@drawable/rounded_button_bg"
-            android:backgroundTint="#4CAF50"
+            android:backgroundTint="@color/brand_green"
             android:letterSpacing="0.015"
             android:elevation="4dp" />
 

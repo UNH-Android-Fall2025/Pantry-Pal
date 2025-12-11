@@ -63,7 +63,7 @@
             android:text="📷 Take Photo"
             android:textSize="16sp"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#4CAF50"
+            android:backgroundTint="@color/brand_green"
             android:layout_marginBottom="16dp" />
 
         <Button
@@ -124,7 +124,7 @@
                 android:layout_marginStart="40dp"
                 android:src="@android:drawable/ic_input_add"
                 app:tint="#FFFFFF"
-                app:backgroundTint="#4CAF50"
+                app:backgroundTint="@color/brand_green"
                 app:fabSize="normal" />
         </LinearLayout>
 
@@ -157,7 +157,7 @@
             android:text="✓ Product Added!"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="#4CAF50"
+            android:textColor="@color/brand_green"
             android:layout_gravity="center"
             android:layout_marginBottom="8dp" />
 
@@ -178,7 +178,7 @@
             android:text="📸 Add Another Product"
             android:textSize="16sp"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#4CAF50"
+            android:backgroundTint="@color/brand_green"
             android:layout_marginBottom="12dp" />
 
         <Button

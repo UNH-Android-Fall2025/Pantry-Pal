@@ -1,10 +1,16 @@
 package com.unh.pantrypalonevo
 
 import android.Manifest
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
+import android.view.View
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +25,7 @@ import com.unh.pantrypalonevo.model.Pantry
 import com.unh.pantrypalonevo.adapter.PantryAdapter
 import kotlinx.coroutines.launch
 import java.util.Locale
+import java.util.regex.Pattern
 import kotlin.math.roundToInt
 
 class HomePageActivity : AppCompatActivity() {
@@ -30,10 +37,12 @@ class HomePageActivity : AppCompatActivity() {
     private val firestore by lazy { FirebaseFirestore.getInstance() }
     private var userLocation: Location? = null
     private lateinit var placesService: PlacesService
-   //usage
-    //green
+    private lateinit var prefs: SharedPreferences
+    
     companion object {
         private const val NEARBY_RADIUS_METERS = 50_000.0 // 50 km
+        private const val PREFS_NAME = "PantryPal_UserPrefs"
+        private const val KEY_LOCATION_ENABLED = "has_location_enabled"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +50,7 @@ class HomePageActivity : AppCompatActivity() {
         binding = ActivityHomePageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val prefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val username = prefs.getString("user_username", null)
         val displayName = prefs.getString("user_name", "User")
         
@@ -54,13 +63,16 @@ class HomePageActivity : AppCompatActivity() {
         binding.tvGreeting.text = "Hello, $greetingName!"
 
         pantryAdapter = PantryAdapter(pantryList) { pantry ->
-            val intent = Intent(this, PantryLocationActivity::class.java)
+            val intent = Intent(this, PantryProductsActivity::class.java)
             intent.putExtra("pantry_name", pantry.name)
             intent.putExtra("pantry_address", pantry.address)
             intent.putExtra("pantry_description", pantry.description)
             // Pass coordinates if available
             pantry.latitude?.let { intent.putExtra("pantry_latitude", it) }
             pantry.longitude?.let { intent.putExtra("pantry_longitude", it) }
+            // Pass zipCode and pantryId if available
+            pantry.zipCode?.let { intent.putExtra("pantry_zip_code", it) }
+            pantry.pantryId?.let { intent.putExtra("pantry_id", it) }
             startActivity(intent)
         }
 
@@ -72,14 +84,26 @@ class HomePageActivity : AppCompatActivity() {
         // ✅ Initialize Places Service
         placesService = PlacesService.getInstance(this)
 
+        // Check if location was already enabled previously
+        if (isLocationEnabled() && ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            binding.locationEnableCard.visibility = View.GONE
+            // Try to get location if we already have permission
+            fetchUserLocation()
+        }
+
         // ✅ Load pantries from Places API and Firestore
         loadPantries()
 
         binding.btnEnableLocation.setOnClickListener {
             requestLocationPermissionAndFetch()
         }
-        // Try fetching location immediately for nearby filtering
-        requestLocationPermissionAndFetch()
+        // Try fetching location immediately for nearby filtering (only if not already enabled)
+        if (!isLocationEnabled()) {
+            requestLocationPermissionAndFetch()
+        }
 
         // ✅ Search filter - searches both local list and Google Places API
         binding.btnSearch.setOnClickListener {
@@ -158,6 +182,9 @@ class HomePageActivity : AppCompatActivity() {
                         } else null
                         val distanceText = distanceMeters?.let { formatDistance(it) }
                             ?: doc.getString("distance").orEmpty()
+                        
+                        // Extract zipCode from address
+                        val zipCode = extractZipCodeFromAddress(address)
 
                             Pantry(
                                 name = name.ifBlank { "Untitled Pantry" },
@@ -166,7 +193,9 @@ class HomePageActivity : AppCompatActivity() {
                             distance = distanceText,
                             latitude = lat,
                             longitude = lon,
-                            distanceMeters = distanceMeters
+                            distanceMeters = distanceMeters,
+                            zipCode = zipCode,
+                            pantryId = doc.id
                         )
                     }
                     // Merge with Places API results
@@ -191,6 +220,9 @@ class HomePageActivity : AppCompatActivity() {
                         val end = doc.getString("endDate").orEmpty()
                         val lat = doc.getDouble("latitude")
                         val lon = doc.getDouble("longitude")
+                        
+                        // Extract zipCode from address
+                        val zipCode = extractZipCodeFromAddress(address)
 
                         Pantry(
                             name = name.ifBlank { "Untitled Pantry" },
@@ -199,7 +231,9 @@ class HomePageActivity : AppCompatActivity() {
                             distance = "",
                             latitude = lat,
                             longitude = lon,
-                            distanceMeters = null
+                            distanceMeters = null,
+                            zipCode = zipCode,
+                            pantryId = doc.id
                         )
                     }
                     displayPantries(loadedPantries)
@@ -239,8 +273,9 @@ class HomePageActivity : AppCompatActivity() {
                 
                 android.util.Log.d("HomePageActivity", "Unique pantries after deduplication: ${uniquePantries.size}")
                 
-                // Calculate distances for all pantries
+                // Calculate distances for all pantries and extract zipCode
                 val pantriesWithDistance = uniquePantries.map { pantry ->
+                    val zipCode = pantry.zipCode ?: extractZipCodeFromAddress(pantry.address)
                     if (pantry.latitude != null && pantry.longitude != null && userLocation != null) {
                         val distanceMeters = calculateDistanceMeters(
                             userLocation!!,
@@ -249,10 +284,11 @@ class HomePageActivity : AppCompatActivity() {
                         )
                         pantry.copy(
                             distanceMeters = distanceMeters,
-                            distance = formatDistance(distanceMeters)
+                            distance = formatDistance(distanceMeters),
+                            zipCode = zipCode
                         )
                     } else {
-                        pantry
+                        pantry.copy(zipCode = zipCode)
                     }
                 }
                 
@@ -357,7 +393,11 @@ class HomePageActivity : AppCompatActivity() {
                     android.util.Log.d("HomePageActivity", "   - Lat: ${location.latitude}")
                     android.util.Log.d("HomePageActivity", "   - Lng: ${location.longitude}")
                     android.util.Log.d("HomePageActivity", "   - Accuracy: ${location.accuracy}m")
-                    binding.locationEnableCard.alpha = 0.7f
+                    
+                    // Mark location as enabled and animate card out
+                    setLocationEnabled(true)
+                    animateCardOut()
+                    
                     Toast.makeText(this, "Location enabled successfully", Toast.LENGTH_SHORT).show()
                     loadPantries()
                 } else {
@@ -370,6 +410,60 @@ class HomePageActivity : AppCompatActivity() {
                 e.printStackTrace()
                 Toast.makeText(this, "Error fetching location: ${e.message}", Toast.LENGTH_LONG).show()
             }
+    }
+    
+    /**
+     * Check if location was previously enabled
+     */
+    private fun isLocationEnabled(): Boolean {
+        return prefs.getBoolean(KEY_LOCATION_ENABLED, false)
+    }
+    
+    /**
+     * Save location enabled state
+     */
+    private fun setLocationEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_LOCATION_ENABLED, enabled).apply()
+    }
+    
+    /**
+     * Animate the location card upward and fade out, then hide it
+     */
+    private fun animateCardOut() {
+        val card = binding.locationEnableCard
+        if (card.visibility != View.VISIBLE) return
+        
+        // Ensure the view is measured before getting height
+        card.post {
+            val cardHeight = if (card.height > 0) card.height else {
+                // Fallback: estimate height based on typical card size (padding + content)
+                // Approximate: 16dp padding top + 16dp padding bottom + ~80dp content = ~112dp
+                // Convert dp to pixels (roughly 3.5dp per pixel on most devices)
+                (112 * resources.displayMetrics.density).toInt()
+            }
+            
+            // Slide up animation - move card up by its height plus some margin
+            val slideUp = ObjectAnimator.ofFloat(card, "translationY", 0f, -cardHeight.toFloat() - 24f)
+            slideUp.duration = 400
+            slideUp.interpolator = AccelerateInterpolator()
+            
+            // Fade out animation
+            val fadeOut = ObjectAnimator.ofFloat(card, "alpha", 1f, 0f)
+            fadeOut.duration = 400
+            fadeOut.interpolator = DecelerateInterpolator()
+            
+            // Combine animations
+            val animatorSet = AnimatorSet()
+            animatorSet.playTogether(slideUp, fadeOut)
+            animatorSet.start()
+            
+            // Hide the card after animation completes
+            animatorSet.addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    card.visibility = View.GONE
+                }
+            })
+        }
     }
 
     private fun calculateDistanceMeters(userLocation: Location, lat: Double, lon: Double): Double {
@@ -390,6 +484,17 @@ class HomePageActivity : AppCompatActivity() {
         } else {
             val miles = distanceMeters / 1609.34
             String.format(Locale.getDefault(), "%.1f mi", miles)
+        }
+    }
+    
+    private fun extractZipCodeFromAddress(address: String): String? {
+        // Try to extract 5-digit zip code from address
+        val pattern = Pattern.compile("\\b\\d{5}(?:-\\d{4})?\\b")
+        val matcher = pattern.matcher(address)
+        return if (matcher.find()) {
+            matcher.group().substring(0, 5) // Take first 5 digits
+        } else {
+            null
         }
     }
     

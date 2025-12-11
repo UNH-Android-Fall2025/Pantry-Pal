@@ -28,7 +28,12 @@
     <color name="input_background">#F8F9FA</color>
     <color name="card_shadow">#1A000000</color>
     
-    <!-- Brand Green Color -->
-    <color name="brand_green">#33E67A</color>
-    <color name="brand_green_dark">#2BC465</color>
+    <!-- Brand Green Color - Primary Brand Color -->
+    <color name="brand_green">#4CAE4F</color>
+    <color name="brand_green_dark">#3E8E41</color>
+    <color name="brand_green_light">#6BC66E</color>
+    
+    <!-- Primary Color (alias for brand_green) -->
+    <color name="colorPrimary">#4CAE4F</color>
+    <color name="primary">#4CAE4F</color>
 </resources>

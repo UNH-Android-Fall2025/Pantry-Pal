@@ -13,7 +13,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="#33E67A"
+        android:background="@color/brand_green"
         android:padding="16dp"
         android:paddingBottom="8dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -198,7 +198,7 @@
             android:text="Add another item to pantry"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#33E67A"
+            android:textColor="@color/brand_green"
             android:background="@drawable/rounded_button_bordered"
             android:backgroundTint="@android:color/transparent"
             android:letterSpacing="0.015"
@@ -214,7 +214,7 @@
             android:textStyle="bold"
             android:textColor="#111814"
             android:background="@drawable/rounded_button_bg"
-            android:backgroundTint="#33E67A"
+            android:backgroundTint="@color/brand_green"
             android:letterSpacing="0.015"
             android:elevation="4dp"
             android:layout_marginBottom="12dp" />
@@ -227,7 +227,7 @@
             android:text="Disassemble Pantry"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#33E67A"
+            android:textColor="@color/brand_green"
             android:background="@android:color/transparent"
             android:letterSpacing="0.015" />
 

@@ -81,7 +81,7 @@
             android:textColor="#111814"
             android:letterSpacing="0.015"
             android:background="@drawable/rounded_button_bg"
-            android:backgroundTint="#33E67A"
+            android:backgroundTint="@color/brand_green"
             android:layout_marginBottom="12dp"
             android:paddingHorizontal="20dp" />
 

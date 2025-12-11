@@ -121,7 +121,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:src="@drawable/ic_add_circle"
-                android:tint="#4CAF50"
+                android:tint="@color/brand_green"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Increase quantity"
                 android:padding="8dp" />

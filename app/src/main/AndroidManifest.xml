@@ -76,6 +76,7 @@
             android:parentActivityName=".PublishPantryActivity" />
         <activity android:name=".PublishPantryFormActivity" />
         <activity android:name=".PantryLocationActivity" />
+        <activity android:name=".PantryProductsActivity" />
         <activity android:name=".ReviewProductsActivity" />
         <activity android:name=".ConfirmProductsActivity" />
 
