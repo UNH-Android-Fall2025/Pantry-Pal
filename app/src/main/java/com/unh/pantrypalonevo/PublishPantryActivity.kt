@@ -14,6 +14,14 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -27,6 +35,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /**
  * ULTRA SIMPLE VERSION - Accept ALL Food-Related Labels
@@ -37,7 +49,6 @@ class PublishPantryActivity : AppCompatActivity() {
     private lateinit var binding: ActivityPublishPantryBinding
     private var capturedImageBitmap: Bitmap? = null
     private var capturedImageUri: Uri? = null
-    private var cameraImageUri: Uri? = null
     private var detectedProducts = mutableListOf<DetectedProduct>()
     private lateinit var detectedProductAdapter: DetectedProductAdapter
     private val confirmedProducts = mutableListOf<DetectedProduct>()
@@ -45,25 +56,18 @@ class PublishPantryActivity : AppCompatActivity() {
     private val pendingSelectedProducts = mutableListOf<DetectedProduct>()
     private val productImageUriMap = mutableMapOf<String, String>()
 
-    private val takePictureLauncher = registerForActivityResult(
-        ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success) {
-            cameraImageUri?.let { uri ->
-                handleCapturedPhoto(uri)
-            } ?: run {
-                Toast.makeText(this, "Unable to access captured image", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            cameraImageUri = null
-        }
-    }
+    // CameraX components
+    private var imageCapture: ImageCapture? = null
+    private var imageAnalysis: ImageAnalysis? = null
+    private var cameraProvider: ProcessCameraProvider? = null
+    private lateinit var cameraExecutor: ExecutorService
+    private var isAnalyzing = false // Prevent multiple simultaneous analyses
 
     private val requestCameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            launchCamera()
+            startCamera()
         } else {
             Toast.makeText(this, "Camera permission is required to take photos", Toast.LENGTH_SHORT).show()
         }
@@ -193,12 +197,32 @@ class PublishPantryActivity : AppCompatActivity() {
         binding = ActivityPublishPantryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        cameraExecutor = Executors.newSingleThreadExecutor()
+
         setupRecyclerView()
         clearDetectedProducts()
         setupClickListeners()
         setupBackButton()
         updateImagePreviewVisibility()
         setupSquareImageContainer()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Stop camera when activity is paused to save resources
+        cameraProvider?.unbindAll()
+        binding.previewView.visibility = View.GONE
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Camera will restart when user clicks "Take Photo" again
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraProvider?.unbindAll()
+        cameraExecutor.shutdown()
     }
     
     private fun setupSquareImageContainer() {
@@ -214,7 +238,13 @@ class PublishPantryActivity : AppCompatActivity() {
     private fun handleTakePhotoClick() {
         when {
             ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
-                launchCamera()
+                if (binding.previewView.visibility == View.VISIBLE && imageCapture != null) {
+                    // Camera is showing and ready, capture photo
+                    capturePhoto()
+                } else {
+                    // Start camera preview
+                    startCamera()
+                }
             }
             ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA) -> {
                 AlertDialog.Builder(this)
@@ -232,24 +262,117 @@ class PublishPantryActivity : AppCompatActivity() {
         }
     }
 
-    private fun launchCamera() {
-        val imageUri = createImageUri()
-        if (imageUri != null) {
-            cameraImageUri = imageUri
-            takePictureLauncher.launch(imageUri)
-        } else {
-            Toast.makeText(this, "Unable to open camera", Toast.LENGTH_SHORT).show()
-        }
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
+        cameraProviderFuture.addListener({
+            try {
+                // Camera provider is now guaranteed to be available
+                cameraProvider = cameraProviderFuture.get()
+
+                // Set up preview
+                val preview = Preview.Builder()
+                    .build()
+                    .also {
+                        it.setSurfaceProvider(binding.previewView.surfaceProvider)
+                    }
+
+                // Set up image capture
+                imageCapture = ImageCapture.Builder()
+                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    .build()
+
+                // Set up image analysis for real-time ML Kit detection
+                imageAnalysis = ImageAnalysis.Builder()
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
+                    .build()
+                    .also {
+                        it.setAnalyzer(cameraExecutor) { imageProxy ->
+                            analyzeImage(imageProxy)
+                        }
+                    }
+
+                // Select back camera
+                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                try {
+                    // Unbind use cases before rebinding
+                    cameraProvider?.unbindAll()
+
+                    // Bind use cases to camera (Preview, ImageCapture, and ImageAnalysis)
+                    imageAnalysis?.let { analysis ->
+                        cameraProvider?.bindToLifecycle(
+                            this,
+                            cameraSelector,
+                            preview,
+                            imageCapture,
+                            analysis
+                        )
+                    } ?: run {
+                        // Fallback if ImageAnalysis setup failed
+                        cameraProvider?.bindToLifecycle(
+                            this,
+                            cameraSelector,
+                            preview,
+                            imageCapture
+                        )
+                    }
+
+                    // Show camera preview, hide image preview
+                    binding.previewView.visibility = View.VISIBLE
+                    binding.ivPreview.visibility = View.GONE
+                    binding.placeholderContent.visibility = View.GONE
+                    updateTakePhotoButtonText()
+
+                } catch (exc: Exception) {
+                    Log.e("PublishPantry", "Use case binding failed", exc)
+                }
+
+            } catch (exc: Exception) {
+                Log.e("PublishPantry", "Camera initialization failed", exc)
+            }
+        }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun createImageUri(): Uri? {
+    private fun capturePhoto() {
+        val imageCapture = imageCapture ?: return
+
+        // Create output file
+        val photoFile = createImageFile()
+        if (photoFile == null) {
+            Toast.makeText(this, "Unable to create image file", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val outputFileOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
+        // Set up image capture listener
+        imageCapture.takePicture(
+            outputFileOptions,
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onError(exception: ImageCaptureException) {
+                    Log.e("PublishPantry", "Photo capture failed: ${exception.message}", exception)
+                    Toast.makeText(this@PublishPantryActivity, "Photo capture failed", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    val savedUri = Uri.fromFile(photoFile)
+                    handleCapturedPhoto(savedUri)
+                }
+            }
+        )
+    }
+
+    private fun createImageFile(): File? {
         return try {
             val imagesDir = File(cacheDir, "camera_images").apply {
                 if (!exists()) mkdirs()
             }
-            val imageFile = File.createTempFile("pantry_capture_", ".jpg", imagesDir)
-            val authority = "${applicationContext.packageName}.fileprovider"
-            FileProvider.getUriForFile(this, authority, imageFile)
+            val timeStamp = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.US)
+                .format(System.currentTimeMillis())
+            File.createTempFile("pantry_capture_$timeStamp", ".jpg", imagesDir)
         } catch (e: Exception) {
             Log.e("PublishPantry", "Error creating image file", e)
             null
@@ -258,6 +381,10 @@ class PublishPantryActivity : AppCompatActivity() {
 
     private fun handleCapturedPhoto(uri: Uri) {
         try {
+            // Stop camera preview
+            cameraProvider?.unbindAll()
+            binding.previewView.visibility = View.GONE
+
             contentResolver.openInputStream(uri)?.use { stream ->
                 val bitmap = BitmapFactory.decodeStream(stream)
                 capturedImageBitmap = bitmap
@@ -275,12 +402,88 @@ class PublishPantryActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Analyze image from ImageAnalysis use case using ML Kit
+     * Runs on background thread (cameraExecutor)
+     */
+    private fun analyzeImage(imageProxy: ImageProxy) {
+        if (isAnalyzing) {
+            imageProxy.close()
+            return
+        }
+
+        try {
+            isAnalyzing = true
+            val mediaImage = imageProxy.image
+            if (mediaImage != null) {
+                // Convert ImageProxy to InputImage for ML Kit
+                val image = InputImage.fromMediaImage(
+                    mediaImage,
+                    imageProxy.imageInfo.rotationDegrees
+                )
+
+                // Run ML Kit inference on background thread
+                val labeler = ImageLabeling.getClient(ImageLabelerOptions.DEFAULT_OPTIONS)
+                labeler.process(image)
+                    .addOnSuccessListener { labels ->
+                        // Process results on main thread
+                        runOnUiThread {
+                            if (labels.isNotEmpty() && detectedProducts.isEmpty()) {
+                                // Only show real-time results if no manual detection has been done
+                                val allProducts = mutableListOf<DetectedProduct>()
+                                labels.forEach { label ->
+                                    if (label.confidence >= 0.6f && isFoodRelated(label.text)) {
+                                        allProducts.add(
+                                            DetectedProduct(
+                                                name = label.text,
+                                                confidence = label.confidence,
+                                                quantity = 1,
+                                                approved = false
+                                            )
+                                        )
+                                    }
+                                }
+                                if (allProducts.isNotEmpty()) {
+                                    // Update UI with real-time detection results
+                                    binding.tvDetectionStatus.text = 
+                                        "🔍 Detecting... Found ${allProducts.size} item(s)"
+                                }
+                            }
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("PublishPantry", "ML Kit analysis failed", e)
+                    }
+                    .addOnCompleteListener {
+                        isAnalyzing = false
+                        imageProxy.close()
+                    }
+            } else {
+                isAnalyzing = false
+                imageProxy.close()
+            }
+        } catch (e: Exception) {
+            Log.e("PublishPantry", "Error analyzing image", e)
+            isAnalyzing = false
+            imageProxy.close()
+        }
+    }
+
     private fun setupClickListeners() {
         binding.btnTakePhoto.setOnClickListener {
-            handleTakePhotoClick()
+            if (binding.previewView.visibility == View.VISIBLE && imageCapture != null) {
+                // Camera is showing, capture photo
+                capturePhoto()
+            } else {
+                // Start camera or take new photo
+                handleTakePhotoClick()
+            }
         }
 
         binding.btnFromGallery.setOnClickListener {
+            // Stop camera if running
+            cameraProvider?.unbindAll()
+            binding.previewView.visibility = View.GONE
             openGalleryPicker()
         }
 
@@ -298,10 +501,21 @@ class PublishPantryActivity : AppCompatActivity() {
     private fun updateImagePreviewVisibility() {
         if (capturedImageBitmap != null) {
             binding.ivPreview.visibility = View.VISIBLE
+            binding.previewView.visibility = View.GONE
             binding.placeholderContent.visibility = View.GONE
-        } else {
+        } else if (binding.previewView.visibility != View.VISIBLE) {
             binding.ivPreview.visibility = View.GONE
+            binding.previewView.visibility = View.GONE
             binding.placeholderContent.visibility = View.VISIBLE
+        }
+        updateTakePhotoButtonText()
+    }
+    
+    private fun updateTakePhotoButtonText() {
+        binding.btnTakePhoto.text = if (binding.previewView.visibility == View.VISIBLE) {
+            "Capture Photo"
+        } else {
+            "Take Photo"
         }
     }
 

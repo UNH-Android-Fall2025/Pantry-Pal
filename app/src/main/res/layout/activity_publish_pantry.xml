@@ -96,6 +96,13 @@
                         android:contentDescription="Image preview"
                         android:visibility="gone" />
 
+                    <!-- CameraX Preview -->
+                    <androidx.camera.view.PreviewView
+                        android:id="@+id/previewView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="gone" />
+
                     <!-- Placeholder Content -->
                     <LinearLayout
                         android:id="@+id/placeholderContent"
