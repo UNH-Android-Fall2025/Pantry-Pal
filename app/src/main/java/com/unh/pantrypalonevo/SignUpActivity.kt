@@ -71,6 +71,9 @@ class SignUpActivity : AppCompatActivity() {
                                     .putString("user_username", username)
                                     .apply()
                                 
+                                // Get and save FCM token
+                                NotificationHelper.getAndSaveToken(userId)
+                                
                                 Toast.makeText(this, "Sign Up Successful", Toast.LENGTH_SHORT).show()
 
                                 val loginIntent = Intent(this, SimpleLoginActivity::class.java)

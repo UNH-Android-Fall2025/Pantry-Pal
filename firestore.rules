@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Helper function to check if request is from Cloud Functions (admin SDK)
+    function isCloudFunction() {
+      return request.auth == null; // Cloud Functions use admin SDK with no auth
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Users can read their own document
+      allow read: if isOwner(userId);
+      
+      // Cloud Functions can read all users (for sending notifications)
+      allow read: if isCloudFunction();
+      
+      // Users can create their own document during signup
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Users can update their own document
+      allow update: if isOwner(userId);
+      
+      // Users can delete their own document
+      allow delete: if isOwner(userId);
+    }
+    
+    // Pantries collection
+    match /pantries/{pantryId} {
+      // Anyone authenticated can read pantries (for browsing)
+      allow read: if isAuthenticated();
+      
+      // Cloud Functions can read all pantries (for triggers)
+      allow read: if isCloudFunction();
+      
+      // Authenticated users can create/update pantries
+      allow create: if isAuthenticated() 
+        && request.resource.data.name is string
+        && request.resource.data.address is string;
+      
+      allow update: if isAuthenticated();
+      
+      // Anyone authenticated can delete pantries (or restrict to owner if you add ownerId field)
+      allow delete: if isAuthenticated();
+      
+      // Donors subcollection
+      match /donors/{donorId} {
+        // Anyone authenticated can read donors
+        allow read: if isAuthenticated();
+        
+        // Cloud Functions can read all donors
+        allow read: if isCloudFunction();
+        
+        // Users can create/update their own donor document
+        allow create, update: if isAuthenticated() && donorId == request.auth.uid;
+        
+        // Users can delete their own donor document
+        allow delete: if isAuthenticated() && donorId == request.auth.uid;
+        
+        // Items subcollection
+        match /items/{itemId} {
+          // Anyone authenticated can read items
+          allow read: if isAuthenticated();
+          
+          // Cloud Functions can read all items
+          allow read: if isCloudFunction();
+          
+          // Only the donor can add/update/delete their items
+          allow create, update, delete: if isAuthenticated() && donorId == request.auth.uid;
+        }
+      }
+      
+      // Reservations subcollection
+      match /reservations/{reservationId} {
+        // Users can read their own reservations
+        allow read: if isAuthenticated() 
+          && (resource.data.userId == request.auth.uid || request.auth.uid == resource.data.userId);
+        
+        // Users can create reservations
+        allow create: if isAuthenticated() 
+          && request.resource.data.userId == request.auth.uid;
+        
+        // Users can update their own reservations
+        allow update: if isAuthenticated() 
+          && resource.data.userId == request.auth.uid;
+        
+        // Users can delete their own reservations
+        allow delete: if isAuthenticated() 
+          && resource.data.userId == request.auth.uid;
+      }
+    }
+    
+    // Recipes collection (if exists)
+    match /recipes/{recipeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

@@ -374,6 +374,13 @@ class SimpleLoginActivity : AppCompatActivity() {
             }
             
             Toast.makeText(this, "User data saved: $email", Toast.LENGTH_SHORT).show()
+            
+            // Get and save FCM token
+            val loggedInUser = FirebaseAuth.getInstance().currentUser
+            loggedInUser?.uid?.let { userId ->
+                NotificationHelper.getAndSaveToken(userId)
+            }
+            
             navigateToHome()
         } catch (e: Exception) {
             Toast.makeText(this, "Error saving user data: ${e.message}", Toast.LENGTH_SHORT).show()

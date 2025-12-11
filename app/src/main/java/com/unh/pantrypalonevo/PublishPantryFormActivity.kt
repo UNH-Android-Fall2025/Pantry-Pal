@@ -135,62 +135,111 @@ class PublishPantryFormActivity : AppCompatActivity() {
         
         binding.btnConfirm.isEnabled = false
         
-        // Convert products to map for Firestore
-        val productsList = pantryItems.map { product ->
-            hashMapOf(
-                "name" to product.name,
-                "quantity" to product.quantity,
-                "confidence" to product.confidence,
-                "imageUri" to (imageUriMap[product.name] ?: "")
-            )
-        }
+        // Get user's display name for donor name
+        val userPrefs = getSharedPreferences("PantryPal_UserPrefs", MODE_PRIVATE)
+        val donorName = userPrefs.getString("user_name", null) 
+            ?: currentUser.displayName 
+            ?: currentUser.email?.substringBefore("@") 
+            ?: "Anonymous Donor"
         
+        // Create pantry document data
         val pantryData = hashMapOf<String, Any>(
             "name" to name,
             "address" to address,
-            "startDate" to startDate,
-            "endDate" to endDate,
-            "ownerId" to currentUser.uid,
-            "ownerEmail" to (currentUser.email ?: ""),
-            "products" to productsList,
-            "productCount" to pantryItems.size,
-            "createdAt" to FieldValue.serverTimestamp(),
-            "updatedAt" to FieldValue.serverTimestamp()
+            "lastUpdated" to FieldValue.serverTimestamp()
         )
 
         Log.d("PublishPantryForm", "📝 Publishing pantry to Firestore:")
         Log.d("PublishPantryForm", "   - Name: $name")
         Log.d("PublishPantryForm", "   - Address: $address")
         Log.d("PublishPantryForm", "   - Owner ID: ${currentUser.uid}")
-        Log.d("PublishPantryForm", "   - Owner Email: ${currentUser.email}")
-        Log.d("PublishPantryForm", "   - Products: ${pantryItems.size} items")
-        Log.d("PublishPantryForm", "   - Collection: pantries")
+        Log.d("PublishPantryForm", "   - Donor Name: $donorName")
+        Log.d("PublishPantryForm", "   - Items: ${pantryItems.size} items")
+        Log.d("PublishPantryForm", "   - Structure: pantries/{pantryId}/donors/{donorId}/items/{itemId}")
 
+        // First, create or get the pantry document
         firestore.collection("pantries")
-            .add(pantryData)
-            .addOnSuccessListener { documentReference ->
-                val documentId = documentReference.id
-                Log.d("PublishPantryForm", "✅ Pantry published successfully!")
-                Log.d("PublishPantryForm", "   - Document ID: $documentId")
-                Log.d("PublishPantryForm", "   - Collection: pantries")
-                Log.d("PublishPantryForm", "   - Owner ID: ${currentUser.uid}")
+            .whereEqualTo("name", name)
+            .whereEqualTo("address", address)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { pantryQuery ->
+                val pantryRef = if (!pantryQuery.isEmpty) {
+                    // Pantry exists, use it
+                    pantryQuery.documents.first().reference
+                } else {
+                    // Create new pantry with auto-generated ID
+                    firestore.collection("pantries").document()
+                }
                 
-                // Verify the document was created by reading it back
-                documentReference.get()
-                    .addOnSuccessListener { document ->
-                        if (document.exists()) {
-                            Log.d("PublishPantryForm", "✅ Document verified in Firestore")
-                            Log.d("PublishPantryForm", "   - Document data: ${document.data}")
-                        } else {
-                            Log.w("PublishPantryForm", "⚠️ Document ID created but document doesn't exist")
-                        }
+                // Set/update pantry document
+                pantryRef.set(pantryData, com.google.firebase.firestore.SetOptions.merge())
+                    .addOnSuccessListener {
+                        // Create donor document under pantry
+                        val donorRef = pantryRef.collection("donors").document(currentUser.uid)
+                        val donorData = hashMapOf<String, Any>(
+                            "name" to donorName,
+                            "contact" to (currentUser.email ?: "")
+                        )
+                        
+                        donorRef.set(donorData, com.google.firebase.firestore.SetOptions.merge())
+                            .addOnSuccessListener {
+                                // Save each item as a document in the items subcollection
+                                val batch = firestore.batch()
+                                
+                                pantryItems.forEachIndexed { index, product ->
+                                    val itemRef = donorRef.collection("items").document("item_${currentUser.uid}_$index")
+                                    val itemData = hashMapOf<String, Any>(
+                                        "name" to product.name,
+                                        "category" to "", // You can add category detection later
+                                        "tags" to listOf<String>(), // You can add tags later
+                                        "quantity" to product.quantity,
+                                        "expiration" to "", // You can add expiration date later
+                                        "pickupLocation" to address,
+                                        "addedAt" to FieldValue.serverTimestamp()
+                                    )
+                                    
+                                    // Add imageUri if available
+                                    imageUriMap[product.name]?.let { uri ->
+                                        itemData["imageUri"] = uri
+                                    }
+                                    
+                                    batch.set(itemRef, itemData)
+                                }
+                                
+                                // Commit all items in batch
+                                batch.commit()
+                                    .addOnSuccessListener {
+                                        Log.d("PublishPantryForm", "✅ Pantry published successfully!")
+                                        Log.d("PublishPantryForm", "   - Pantry ID: ${pantryRef.id}")
+                                        Log.d("PublishPantryForm", "   - Donor ID: ${currentUser.uid}")
+                                        Log.d("PublishPantryForm", "   - Items saved: ${pantryItems.size}")
+                                        
+                                        Toast.makeText(this, getString(R.string.toast_pantry_published), Toast.LENGTH_SHORT).show()
+                                        navigateHome(name, address, startDate, endDate)
+                                    }
+                                    .addOnFailureListener { error ->
+                                        binding.btnConfirm.isEnabled = true
+                                        Log.e("PublishPantryForm", "❌ Error saving items: ${error.message}")
+                                        Toast.makeText(this, "Error saving items: ${error.message}", Toast.LENGTH_LONG).show()
+                                    }
+                            }
+                            .addOnFailureListener { error ->
+                                binding.btnConfirm.isEnabled = true
+                                Log.e("PublishPantryForm", "❌ Error creating donor: ${error.message}")
+                                Toast.makeText(this, "Error creating donor: ${error.message}", Toast.LENGTH_LONG).show()
+                            }
                     }
-                    .addOnFailureListener { e ->
-                        Log.w("PublishPantryForm", "⚠️ Could not verify document: ${e.message}")
+                    .addOnFailureListener { error ->
+                        binding.btnConfirm.isEnabled = true
+                        Log.e("PublishPantryForm", "❌ Error creating pantry: ${error.message}")
+                        Toast.makeText(this, "Error creating pantry: ${error.message}", Toast.LENGTH_LONG).show()
                     }
-                
-                Toast.makeText(this, getString(R.string.toast_pantry_published), Toast.LENGTH_SHORT).show()
-                navigateHome(name, address, startDate, endDate)
+            }
+            .addOnFailureListener { error ->
+                binding.btnConfirm.isEnabled = true
+                Log.e("PublishPantryForm", "❌ Error checking pantry: ${error.message}")
+                Toast.makeText(this, "Error checking pantry: ${error.message}", Toast.LENGTH_LONG).show()
             }
             .addOnFailureListener { error ->
                 binding.btnConfirm.isEnabled = true

@@ -1,8 +1,13 @@
 package com.unh.pantrypalonevo
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -11,8 +16,25 @@ import com.google.firebase.firestore.FirebaseFirestore
  * Firebase authentication check happens first, then routes to appropriate activity
  */
 class MainActivity : ComponentActivity() {
+    
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission granted, notifications will work
+        }
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Request notification permission for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
+                != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
 
         val auth = FirebaseAuth.getInstance()
         val currentUser = auth.currentUser
@@ -57,6 +79,9 @@ class MainActivity : ComponentActivity() {
                         .putString("user_username", username)
                         .putString("user_name", username)
                         .apply()
+
+                    // Get and save FCM token
+                    NotificationHelper.getAndSaveToken(currentUser.uid)
 
                     // Navigate to appropriate screen
                     val next = if (fingerprintEnabled)

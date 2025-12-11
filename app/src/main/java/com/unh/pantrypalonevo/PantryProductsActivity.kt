@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import com.google.firebase.firestore.FirebaseFirestoreException
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -73,8 +74,11 @@ class PantryProductsActivity : AppCompatActivity() {
         binding.tvPantryAddress.text = pantryAddress
         binding.tvPantryDescription.text = pantryDescription
 
-        Log.d("PantryProducts", "Loaded pantry: $pantryName")
-        Log.d("PantryProducts", "ZipCode: $zipCode, PantryId: $pantryId")
+        Log.d("PantryProducts", "=== LOADING PANTRY DATA ===")
+        Log.d("PantryProducts", "Pantry Name: $pantryName")
+        Log.d("PantryProducts", "Pantry Address: $pantryAddress")
+        Log.d("PantryProducts", "Pantry ID: $pantryId")
+        Log.d("PantryProducts", "ZipCode: $zipCode")
     }
 
     private fun extractZipCode(address: String): String? {
@@ -116,8 +120,13 @@ class PantryProductsActivity : AppCompatActivity() {
     }
 
     private fun loadProducts() {
-        if (zipCode.isNullOrBlank() || pantryId.isNullOrBlank()) {
-            Log.w("PantryProducts", "Missing zipCode or pantryId, trying to find pantry by name/address")
+        Log.d("PantryProducts", "=== STARTING loadProducts() ===")
+        Log.d("PantryProducts", "pantryId: $pantryId")
+        Log.d("PantryProducts", "pantryName: $pantryName")
+        Log.d("PantryProducts", "pantryAddress: $pantryAddress")
+        
+        if (pantryId.isNullOrBlank()) {
+            Log.w("PantryProducts", "⚠️ Missing pantryId, trying to find pantry by name/address")
             findPantryAndLoadProducts()
             return
         }
@@ -127,42 +136,107 @@ class PantryProductsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val productsCollection = firestore
-                    .collection("pantries")
-                    .document(zipCode!!)
-                    .collection("posts")
-                    .document(pantryId!!)
-                    .collection("products")
-
-                val snapshot = productsCollection.get().await()
+                Log.d("PantryProducts", "📂 Fetching pantry document: $pantryId")
+                val pantryRef = firestore.collection("pantries").document(pantryId!!)
+                val pantryDoc = pantryRef.get().await()
+                
+                if (!pantryDoc.exists()) {
+                    Log.w("PantryProducts", "❌ Pantry document not found: $pantryId")
+                    Toast.makeText(this@PantryProductsActivity, "Pantry not found. Trying to search by name...", Toast.LENGTH_SHORT).show()
+                    findPantryAndLoadProducts()
+                    return@launch
+                }
+                
+                Log.d("PantryProducts", "✅ Pantry document exists")
+                Log.d("PantryProducts", "Pantry data: ${pantryDoc.data}")
                 
                 products.clear()
-                products.addAll(snapshot.documents.mapNotNull { doc ->
-                    try {
-                        PantryProduct(
-                            productId = doc.id,
-                            name = doc.getString("name") ?: "",
-                            description = doc.getString("description") ?: "",
-                            imageUrl = doc.getString("imageUrl"),
-                            category = doc.getString("category") ?: "",
-                            selected = false,
-                            quantity = (doc.getLong("quantity") ?: 1).toInt()
-                        )
-                    } catch (e: Exception) {
-                        Log.e("PantryProducts", "Error parsing product ${doc.id}", e)
-                        null
+                
+                // Try new structure first: pantries/{pantryId}/donors/{donorId}/items/{itemId}
+                Log.d("PantryProducts", "🔍 Checking for donors subcollection...")
+                val donorsSnapshot = pantryRef.collection("donors").get().await()
+                
+                Log.d("PantryProducts", "Found ${donorsSnapshot.size()} donors")
+                
+                if (!donorsSnapshot.isEmpty) {
+                    // New structure: Read from donors/items subcollections
+                    Log.d("PantryProducts", "✅ Using new structure: donors/items")
+                    
+                    for (donorDoc in donorsSnapshot.documents) {
+                        Log.d("PantryProducts", "  📦 Processing donor: ${donorDoc.id}")
+                        val itemsSnapshot = donorDoc.reference.collection("items").get().await()
+                        Log.d("PantryProducts", "  Found ${itemsSnapshot.size()} items for donor ${donorDoc.id}")
+                        
+                        itemsSnapshot.documents.forEach { itemDoc ->
+                            val itemData = itemDoc.data ?: emptyMap()
+                            Log.d("PantryProducts", "    Item: ${itemData["name"]}, Quantity: ${itemData["quantity"]}")
+                            products.add(
+                                PantryProduct(
+                                    productId = itemDoc.id,
+                                    name = itemData["name"] as? String ?: "",
+                                    description = itemData["pickupLocation"] as? String ?: "",
+                                    imageUrl = itemData["imageUri"] as? String,
+                                    category = itemData["category"] as? String ?: "",
+                                    selected = false,
+                                    quantity = (itemData["quantity"] as? Long ?: 1).toInt()
+                                )
+                            )
+                        }
                     }
-                })
-
+                    
+                    Log.d("PantryProducts", "✅ Loaded ${products.size} items from ${donorsSnapshot.size()} donors (new structure)")
+                } else {
+                    // Fallback to old structure: products array in pantry document
+                    Log.d("PantryProducts", "🔍 No donors found, checking for products array...")
+                    @Suppress("UNCHECKED_CAST")
+                    val productsList = pantryDoc.get("products") as? List<Map<String, Any>>?
+                    
+                    if (productsList != null && productsList.isNotEmpty()) {
+                        Log.d("PantryProducts", "✅ Using old structure: products array")
+                        Log.d("PantryProducts", "Found ${productsList.size} products in array")
+                        
+                        products.addAll(productsList.mapIndexed { index, productMap ->
+                            Log.d("PantryProducts", "  Product $index: ${productMap["name"]}")
+                            PantryProduct(
+                                productId = index.toString(),
+                                name = productMap["name"] as? String ?: "",
+                                description = productMap["imageUri"] as? String ?: "",
+                                imageUrl = productMap["imageUri"] as? String,
+                                category = "",
+                                selected = false,
+                                quantity = (productMap["quantity"] as? Long ?: 1).toInt()
+                            )
+                        })
+                        
+                        Log.d("PantryProducts", "✅ Loaded ${products.size} items from products array (old structure)")
+                    } else {
+                        Log.w("PantryProducts", "❌ No products found in either structure")
+                        Log.w("PantryProducts", "Pantry document fields: ${pantryDoc.data?.keys}")
+                        Toast.makeText(this@PantryProductsActivity, "No products found in this pantry", Toast.LENGTH_LONG).show()
+                    }
+                }
+                
+                Log.d("PantryProducts", "=== FINAL RESULT: ${products.size} products ===")
                 productAdapter.notifyDataSetChanged()
                 updateEmptyState()
                 binding.progressBar.visibility = View.GONE
 
-                Log.d("PantryProducts", "Loaded ${products.size} products")
             } catch (e: Exception) {
-                Log.e("PantryProducts", "Error loading products", e)
+                Log.e("PantryProducts", "❌ Error loading products", e)
+                e.printStackTrace()
                 binding.progressBar.visibility = View.GONE
-                Toast.makeText(this@PantryProductsActivity, "Error loading products: ${e.message}", Toast.LENGTH_LONG).show()
+                
+                // Check if it's a permission error
+                if (e is FirebaseFirestoreException && e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                    Log.e("PantryProducts", "⚠️ PERMISSION DENIED - Firestore rules need to be updated!")
+                    Toast.makeText(
+                        this@PantryProductsActivity, 
+                        "Permission denied. Please deploy Firestore rules. Check FIX_PERMISSION_DENIED.md", 
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    Toast.makeText(this@PantryProductsActivity, "Error loading products: ${e.message}", Toast.LENGTH_LONG).show()
+                }
                 updateEmptyState()
             }
         }
@@ -194,7 +268,7 @@ class PantryProductsActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                // Fallback to old schema: pantries collection
+                // Fallback: Try to find pantry by name/address
                 val oldSnapshot = firestore
                     .collection("pantries")
                     .whereEqualTo("name", pantryName)
@@ -206,24 +280,12 @@ class PantryProductsActivity : AppCompatActivity() {
                 if (!oldSnapshot.isEmpty) {
                     val doc = oldSnapshot.documents.first()
                     pantryId = doc.id
-                    // Products might be in a subcollection or in the document itself
-                    val productsList = doc.get("products") as? List<Map<String, Any>>
-                    if (productsList != null) {
-                        products.clear()
-                        products.addAll(productsList.mapIndexed { index, productMap ->
-                            PantryProduct(
-                                productId = index.toString(),
-                                name = productMap["name"] as? String ?: "",
-                                description = productMap["imageUri"] as? String ?: "",
-                                imageUrl = productMap["imageUri"] as? String,
-                                category = "",
-                                selected = false,
-                                quantity = (productMap["quantity"] as? Long ?: 1).toInt()
-                            )
-                        })
-                        productAdapter.notifyDataSetChanged()
-                        updateEmptyState()
-                    }
+                    // Load products (will handle both old and new structure)
+                    loadProducts()
+                } else {
+                    Log.w("PantryProducts", "Pantry not found by name/address")
+                    binding.progressBar.visibility = View.GONE
+                    updateEmptyState()
                 }
 
                 binding.progressBar.visibility = View.GONE
@@ -237,12 +299,15 @@ class PantryProductsActivity : AppCompatActivity() {
     }
 
     private fun updateEmptyState() {
+        Log.d("PantryProducts", "updateEmptyState: products.size = ${products.size}")
         if (products.isEmpty()) {
             binding.tvEmptyState.visibility = View.VISIBLE
             binding.rvProducts.visibility = View.GONE
+            Log.d("PantryProducts", "Showing empty state message")
         } else {
             binding.tvEmptyState.visibility = View.GONE
             binding.rvProducts.visibility = View.VISIBLE
+            Log.d("PantryProducts", "Showing ${products.size} products in RecyclerView")
         }
     }
 
