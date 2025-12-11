@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bottom_sheet_background"
+    android:paddingBottom="8dp">
+
+    <!-- Drag Handle -->
+    <View
+        android:id="@+id/dragHandle"
+        android:layout_width="40dp"
+        android:layout_height="6dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/rounded_gray_handle"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/headerContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="16dp"
+        app:layout_constraintTop_toBottomOf="@id/dragHandle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter Ingredients"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#131613"
+            android:letterSpacing="0.015"
+            tools:text="Enter Ingredients" />
+
+        <TextView
+            android:id="@+id/tvHelperText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Add details manually to update your pantry."
+            android:textSize="14sp"
+            android:textColor="#757575"
+            tools:text="Add details manually to update your pantry." />
+
+    </LinearLayout>
+
+    <!-- Input Fields Container -->
+    <LinearLayout
+        android:id="@+id/inputContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="8dp"
+        android:paddingTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/headerContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Ingredient Name Field -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ingredient Name"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#131613"
+                android:layout_marginBottom="8dp"
+                tools:text="Ingredient Name" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="e.g., Chicken Breast, Tomato"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="2dp"
+                app:boxBackgroundMode="filled"
+                app:boxBackgroundColor="#F5F5F5"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:hintTextColor="#6C7F6D"
+                app:startIconDrawable="@drawable/ic_ingredient"
+                app:startIconTint="#4CAE4F">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etIngredientName"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="text"
+                    android:textSize="16sp"
+                    android:textColor="#131613"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:background="@android:color/transparent"
+                    android:hint="e.g., Chicken Breast, Tomato"
+                    tools:text="Potato, Tomato, Onion" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:layout_marginStart="4dp"
+                android:text="What item are you adding?"
+                android:textSize="12sp"
+                android:textColor="#757575"
+                tools:text="What item are you adding?" />
+
+        </LinearLayout>
+
+        <!-- Quantity & Unit Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="20dp">
+
+            <!-- Quantity -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginEnd="16dp"
+                android:minWidth="120dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quantity"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#131613"
+                    android:layout_marginBottom="8dp"
+                    tools:text="Quantity" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="0"
+                    app:boxStrokeWidth="0dp"
+                    app:boxStrokeWidthFocused="2dp"
+                    app:boxBackgroundMode="filled"
+                    app:boxBackgroundColor="#F5F5F5"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusBottomEnd="12dp"
+                    app:hintTextColor="#6C7F6D">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etQuantity"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:inputType="number"
+                        android:textSize="16sp"
+                        android:textColor="#131613"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:background="@android:color/transparent"
+                        android:hint="0"
+                        tools:text="5" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginStart="4dp"
+                    android:text="Approx amount"
+                    android:textSize="12sp"
+                    android:textColor="#757575"
+                    tools:text="Approx amount" />
+
+            </LinearLayout>
+
+            <!-- Unit -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.4"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Unit"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#131613"
+                    android:layout_marginBottom="8dp"
+                    tools:text="Unit" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Select unit"
+                    app:boxStrokeWidth="0dp"
+                    app:boxStrokeWidthFocused="2dp"
+                    app:boxBackgroundMode="filled"
+                    app:boxBackgroundColor="#F5F5F5"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusBottomEnd="12dp"
+                    app:hintTextColor="#6C7F6D"
+                    app:endIconMode="custom"
+                    app:endIconDrawable="@drawable/ic_expand_more"
+                    app:endIconTint="#757575">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etUnit"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:inputType="none"
+                        android:textSize="16sp"
+                        android:textColor="#131613"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:background="@android:color/transparent"
+                        android:hint="Select unit"
+                        android:focusable="false"
+                        android:clickable="true"
+                        tools:text="Grams (g)" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginStart="4dp"
+                    android:text="g, kg, cups, pcs"
+                    android:textSize="12sp"
+                    android:textColor="#757575"
+                    tools:text="g, kg, cups, pcs" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:id="@+id/buttonContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/inputContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Primary Button -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnGenerateRecipes"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Generate recipes"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.015"
+            android:textColor="@android:color/white"
+            android:background="@drawable/button_green_rounded"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:drawableStart="@drawable/ic_auto_awesome"
+            android:drawableTint="@android:color/white"
+            android:drawablePadding="10dp"
+            android:elevation="4dp"
+            android:gravity="center"
+            tools:text="Generate recipes" />
+
+        <!-- Secondary Button -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnCancel"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:text="Cancel"
+            android:textSize="16sp"
+            android:textStyle="normal"
+            android:textColor="#757575"
+            android:background="@drawable/button_transparent_rounded_12dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:gravity="center"
+            tools:text="Cancel" />
+
+    </LinearLayout>
+
+    <!-- Safe area spacing -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        app:layout_constraintTop_toBottomOf="@id/buttonContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

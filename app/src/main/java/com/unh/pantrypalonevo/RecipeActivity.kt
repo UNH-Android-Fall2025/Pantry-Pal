@@ -4,13 +4,13 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.unh.pantrypalonevo.databinding.ActivityRecipeBinding
+import com.unh.pantrypalonevo.databinding.BottomSheetIngredientInputBinding
 import kotlinx.coroutines.launch
 
 class RecipeActivity : AppCompatActivity() {
@@ -41,6 +41,36 @@ class RecipeActivity : AppCompatActivity() {
         }
 
         setupRecyclerView()
+        setupCancelButton()
+        setupBottomNavigation()
+    }
+    
+    private fun setupCancelButton() {
+        binding.btnCancel.setOnClickListener {
+            finish()
+        }
+    }
+    
+    private fun setupBottomNavigation() {
+        binding.btnHome.setOnClickListener {
+            val intent = Intent(this, HomePageActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+        
+        // Recipes button is already active, no action needed
+        
+        binding.btnCart.setOnClickListener {
+            val intent = Intent(this, CartActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+        
+        binding.btnProfile.setOnClickListener {
+            val intent = Intent(this, ProfileActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
     }
 
     private fun getItemsFromIntent(): List<String> {
@@ -95,14 +125,29 @@ class RecipeActivity : AppCompatActivity() {
     }
 
     private fun generateRecipes(items: List<String>) {
-        binding.progressBar.visibility = View.VISIBLE
+        // Show loading state
+        binding.loadingContainer.visibility = View.VISIBLE
         binding.recyclerRecipes.visibility = View.GONE
-        binding.tvLoading.text = "Generating recipes with AI..."
-        binding.tvLoading.visibility = View.VISIBLE
+        binding.tvRecipeFor.visibility = View.GONE
+        binding.btnCancel.visibility = View.VISIBLE
+        
+        // Initialize progress (start at 0%)
+        updateProgress(0)
 
         lifecycleScope.launch {
             try {
+                // Simulate progress updates (since API doesn't provide real progress)
+                updateProgress(25)
+                kotlinx.coroutines.delay(300)
+                updateProgress(50)
+                kotlinx.coroutines.delay(300)
+                updateProgress(75)
+                
                 val generatedRecipes = deepSeekService.generateRecipes(items)
+                
+                // Complete progress
+                updateProgress(100)
+                kotlinx.coroutines.delay(200)
                 
                 if (generatedRecipes.isNotEmpty()) {
                     recipes.clear()
@@ -111,13 +156,14 @@ class RecipeActivity : AppCompatActivity() {
                     recipes.addAll(top10Recipes)
                     recipeAdapter.notifyDataSetChanged()
                     
-                    binding.progressBar.visibility = View.GONE
+                    // Hide loading, show results
+                    binding.loadingContainer.visibility = View.GONE
                     binding.recyclerRecipes.visibility = View.VISIBLE
-                    binding.tvLoading.visibility = View.GONE
+                    binding.tvRecipeFor.visibility = View.VISIBLE
+                    binding.btnCancel.visibility = View.GONE
                     
-                    // Update header to show count
-                    val itemsText = items.joinToString(", ")
-                    binding.tvRecipeFor.text = "Top ${top10Recipes.size} Recipes for: $itemsText"
+                    // Update header text (already set in XML, but ensure it's visible)
+                    binding.tvRecipeFor.text = "BASED ON YOUR PANTRY"
                     
                     Toast.makeText(
                         this@RecipeActivity,
@@ -126,9 +172,10 @@ class RecipeActivity : AppCompatActivity() {
                     ).show()
                 } else {
                     // Fallback: Show message or use default recipes
-                    binding.progressBar.visibility = View.GONE
+                    binding.loadingContainer.visibility = View.GONE
                     binding.tvLoading.text = "Unable to generate recipes.\n\nPlease check:\n• Internet connection\n• DeepSeek API key is valid\n• Try again in a moment\n\nCheck Logcat for details."
                     binding.tvLoading.visibility = View.VISIBLE
+                    binding.btnCancel.visibility = View.VISIBLE
                     
                     android.util.Log.e("RecipeActivity", "❌ No recipes generated. Check Logcat for DeepSeekService logs.")
                     
@@ -140,7 +187,7 @@ class RecipeActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 android.util.Log.e("RecipeActivity", "Error generating recipes", e)
-                binding.progressBar.visibility = View.GONE
+                binding.loadingContainer.visibility = View.GONE
                 
                 val errorMessage = when (e) {
                     is java.net.SocketTimeoutException -> "Request timed out.\n\nThe API is taking too long to respond.\n\nPlease:\n• Check your internet connection\n• Try again in a moment\n• The request may need more time"
@@ -150,6 +197,7 @@ class RecipeActivity : AppCompatActivity() {
                 
                 binding.tvLoading.text = errorMessage
                 binding.tvLoading.visibility = View.VISIBLE
+                binding.btnCancel.visibility = View.VISIBLE
                 
                 Toast.makeText(
                     this@RecipeActivity,
@@ -161,39 +209,66 @@ class RecipeActivity : AppCompatActivity() {
     }
     
     /**
-     * Show dialog to let user enter items manually
+     * Update progress bar and percentage
+     */
+    private fun updateProgress(percentage: Int) {
+        val clampedPercentage = percentage.coerceIn(0, 100)
+        binding.tvProgressPercentage.text = "$clampedPercentage%"
+        
+        // Update progress fill width
+        binding.progressTrackContainer.post {
+            val maxWidth = binding.progressTrackContainer.width
+            if (maxWidth > 0) {
+                val fillWidth = (maxWidth * clampedPercentage / 100).toInt()
+                val layoutParams = binding.progressFill.layoutParams
+                layoutParams.width = fillWidth
+                binding.progressFill.layoutParams = layoutParams
+            }
+        }
+    }
+    
+    /**
+     * Show bottom sheet dialog to let user enter items manually
      */
     private fun showItemSelectionDialog() {
-        val input = EditText(this)
-        input.hint = "Enter items separated by commas (e.g., Potato, Tomato, Onion)"
+        val bottomSheetDialog = BottomSheetDialog(this)
+        val bottomSheetBinding = BottomSheetIngredientInputBinding.inflate(layoutInflater)
+        bottomSheetDialog.setContentView(bottomSheetBinding.root)
         
-        AlertDialog.Builder(this)
-            .setTitle("Enter Ingredients")
-            .setMessage("What ingredients do you have?")
-            .setView(input)
-            .setPositiveButton("Generate Recipes") { _, _ ->
-                val itemsText = input.text.toString().trim()
-                if (itemsText.isNotBlank()) {
-                    val items = itemsText.split(",")
-                        .map { it.trim() }
-                        .filter { it.isNotBlank() }
-                    
-                    if (items.isNotEmpty()) {
-                        binding.tvRecipeFor.text = "Recipes for: ${items.joinToString(", ")}"
-                        generateRecipes(items)
-                    } else {
-                        Toast.makeText(this, "Please enter at least one item", Toast.LENGTH_SHORT).show()
-                        showItemSelectionDialog() // Show again
-                    }
+        // Set up unit dropdown (optional - for future use)
+        val units = listOf("Grams (g)", "Kilograms (kg)", "Cups", "Pieces", "Tablespoons")
+        // Note: Unit field is for future enhancement, currently not used in logic
+        
+        // Generate Recipes button
+        bottomSheetBinding.btnGenerateRecipes.setOnClickListener {
+            val itemsText = bottomSheetBinding.etIngredientName.text?.toString()?.trim() ?: ""
+            if (itemsText.isNotBlank()) {
+                val items = itemsText.split(",")
+                    .map { it.trim() }
+                    .filter { it.isNotBlank() }
+                
+                if (items.isNotEmpty()) {
+                    bottomSheetDialog.dismiss()
+                    binding.tvRecipeFor.text = "Recipes for: ${items.joinToString(", ")}"
+                    generateRecipes(items)
                 } else {
-                    Toast.makeText(this, "Please enter items", Toast.LENGTH_SHORT).show()
-                    showItemSelectionDialog() // Show again
+                    Toast.makeText(this, "Please enter at least one item", Toast.LENGTH_SHORT).show()
                 }
+            } else {
+                Toast.makeText(this, "Please enter items", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton("Cancel") { _, _ ->
-                finish()
-            }
-            .setCancelable(false)
-            .show()
+        }
+        
+        // Cancel button
+        bottomSheetBinding.btnCancel.setOnClickListener {
+            bottomSheetDialog.dismiss()
+            finish()
+        }
+        
+        // Prevent dismissing by tapping outside
+        bottomSheetDialog.setCancelable(false)
+        bottomSheetDialog.setCanceledOnTouchOutside(false)
+        
+        bottomSheetDialog.show()
     }
 }

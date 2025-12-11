@@ -1,98 +1,186 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cardRecipe"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="8dp"
-    android:layout_marginVertical="6dp"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
     app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:cardBackgroundColor="#FFFFFF">
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:strokeWidth="1dp"
+    app:strokeColor="#E5E7EB">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
-        <ImageView
-            android:id="@+id/ivRecipeImage"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:scaleType="centerCrop"
-            android:background="#F5F5F5"
-            android:src="@drawable/ic_launcher_foreground"
-            android:contentDescription="Recipe image" />
+        <!-- Icon Container -->
+        <FrameLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/recipe_icon_bg_light"
+            android:gravity="center">
 
+            <ImageView
+                android:id="@+id/ivRecipeIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_menu_book"
+                android:tint="#4CAE4F"
+                android:contentDescription="Recipe icon" />
+
+        </FrameLayout>
+
+        <!-- Content -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:gravity="center_vertical">
+            android:orientation="vertical">
 
+            <!-- Title -->
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Recipe Title"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#212121"
-                android:maxLines="2"
-                android:ellipsize="end" />
+                android:textColor="#131613"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="Avocado Toast" />
 
+            <!-- Metadata Row (time - difficulty - kcal) -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:layout_marginTop="4dp">
 
-                <TextView
-                    android:id="@+id/tvTime"
+                <!-- Time -->
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="⏱ 30 mins"
-                    android:textSize="13sp"
-                    android:textColor="#757575"
-                    android:paddingEnd="12dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@drawable/ic_schedule"
+                        android:tint="#757575"
+                        android:layout_marginEnd="2dp"
+                        android:contentDescription="Time" />
+
+                    <TextView
+                        android:id="@+id/tvTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="10 min"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#757575"
+                        tools:text="10 min" />
+
+                </LinearLayout>
+
+                <!-- Dot separator -->
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="4dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="@drawable/dot_separator" />
+
+                <!-- Difficulty -->
                 <TextView
                     android:id="@+id/tvDifficulty"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📊 Easy"
-                    android:textSize="13sp"
-                    android:textColor="#757575" />
+                    android:text="Easy"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#757575"
+                    tools:text="Easy" />
+
+                <!-- Dot separator -->
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="4dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="@drawable/dot_separator" />
+
+                <!-- Kcal (optional) -->
+                <TextView
+                    android:id="@+id/tvKcal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="320 kcal"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#757575"
+                    android:visibility="gone"
+                    tools:text="320 kcal"
+                    tools:visibility="visible" />
+
             </LinearLayout>
 
+            <!-- Ingredients (one line) -->
             <TextView
                 android:id="@+id/tvIngredients"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Ingredients: ..."
-                android:textSize="13sp"
-                android:textColor="#9E9E9E"
-                android:maxLines="2"
+                android:layout_marginTop="8dp"
+                android:text="Avocado, Whole Grain Bread, Sea Salt, Red Pepper Flakes"
+                android:textSize="14sp"
+                android:textColor="#757575"
+                android:maxLines="1"
                 android:ellipsize="end"
-                android:layout_marginTop="8dp" />
+                tools:text="Avocado, Whole Grain Bread, Sea Salt, Red Pepper Flakes" />
 
-            <TextView
-                android:id="@+id/tvViewDetails"
+            <!-- View Recipe Link -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="View Recipe →"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="@color/brand_green"
-                android:layout_marginTop="8dp" />
+                android:layout_gravity="end"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="12dp">
+
+                <TextView
+                    android:id="@+id/tvViewDetails"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View Recipe"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#4CAE4F"
+                    tools:text="View Recipe" />
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="4dp"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:tint="#4CAE4F"
+                    android:contentDescription="Arrow" />
+
+            </LinearLayout>
+
         </LinearLayout>
+
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>

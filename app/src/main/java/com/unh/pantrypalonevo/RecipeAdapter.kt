@@ -1,6 +1,7 @@
 package com.unh.pantrypalonevo
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.unh.pantrypalonevo.databinding.ItemRecipeBinding
@@ -22,16 +23,18 @@ class RecipeAdapter(
         
         fun bind(recipe: Recipe) {
             binding.tvTitle.text = recipe.title
-            binding.tvTime.text = "⏱ ${recipe.time}"
-            binding.tvDifficulty.text = "📊 ${recipe.difficulty}"
+            // Format time without emoji (e.g., "10 min" or "30 mins")
+            binding.tvTime.text = recipe.time.replace("⏱", "").trim()
+            // Format difficulty without emoji
+            binding.tvDifficulty.text = recipe.difficulty.replace("📊", "").trim()
             
-            // Show first 3-4 ingredients as preview
-            val ingredientsPreview = if (recipe.ingredients.size > 3) {
-                recipe.ingredients.take(3).joinToString(", ") + " +${recipe.ingredients.size - 3} more"
-            } else {
-                recipe.ingredients.joinToString(", ")
-            }
-            binding.tvIngredients.text = "Ingredients: $ingredientsPreview"
+            // Show ingredients as one line (no "Ingredients:" prefix)
+            val ingredientsPreview = recipe.ingredients.joinToString(", ")
+            binding.tvIngredients.text = ingredientsPreview
+            
+            // Kcal placeholder (since Recipe model doesn't have kcal, we'll hide it or use a default)
+            // For now, hide it since we don't have the data
+            binding.tvKcal.visibility = View.GONE
             
             // Set click listener
             binding.cardRecipe.setOnClickListener {
