@@ -9,11 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.unh.pantrypalonevo.databinding.ActivityReviewSavedItemsBinding
 
-/**
- * REVIEW ALL PRODUCTS SCREEN
- * Shows all products added in background list
- * User can edit quantities and publish to Firebase
- */
 class ReviewSavedItemsActivity : AppCompatActivity() {
 
 	private lateinit var binding: ActivityReviewSavedItemsBinding

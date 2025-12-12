@@ -302,7 +302,7 @@ class CartActivity : AppCompatActivity() {
                 // Send notification to donor
                 sendDonorNotification(donorId, recipientName, orderItems.size, pantryName)
                 
-                Log.d("CartActivity", "✅ Order created successfully: $orderId")
+                Log.d("CartActivity", "Order created successfully: $orderId")
                 
                 binding.progressBar.visibility = View.GONE
                 
@@ -322,7 +322,7 @@ class CartActivity : AppCompatActivity() {
                     .show()
                 
             } catch (e: Exception) {
-                Log.e("CartActivity", "❌ Error creating order", e)
+                Log.e("CartActivity", "Error creating order", e)
                 e.printStackTrace()
                 binding.progressBar.visibility = View.GONE
                 Toast.makeText(this@CartActivity, "Error creating order: ${e.message}", Toast.LENGTH_LONG).show()
@@ -351,12 +351,12 @@ class CartActivity : AppCompatActivity() {
                         )
                     }
                     
-                    Log.d("CartActivity", "✅ Notification sent to donor: $donorId")
+                    Log.d("CartActivity", "Notification sent to donor: $donorId")
                 } else {
-                    Log.w("CartActivity", "⚠️ Donor has no notification token")
+                    Log.w("CartActivity", "Donor has no notification token")
                 }
             } catch (e: Exception) {
-                Log.e("CartActivity", "❌ Error sending notification", e)
+                Log.e("CartActivity", "Error sending notification", e)
             }
         }
     }

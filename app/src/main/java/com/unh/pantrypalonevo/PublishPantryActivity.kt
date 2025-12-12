@@ -40,10 +40,6 @@ import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-/**
- * ULTRA SIMPLE VERSION - Accept ALL Food-Related Labels
- * No strict filtering!
- */
 class PublishPantryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPublishPantryBinding
@@ -446,7 +442,7 @@ class PublishPantryActivity : AppCompatActivity() {
                                 if (allProducts.isNotEmpty()) {
                                     // Update UI with real-time detection results
                                     binding.tvDetectionStatus.text = 
-                                        "🔍 Detecting... Found ${allProducts.size} item(s)"
+                                        "Detecting... Found ${allProducts.size} item(s)"
                                 }
                             }
                         }
@@ -672,7 +668,7 @@ class PublishPantryActivity : AppCompatActivity() {
      */
     private fun detectProducts(bitmap: Bitmap) {
         binding.progressBar.visibility = View.VISIBLE
-        binding.tvDetectionStatus.text = "🔍 Detecting products..."
+        binding.tvDetectionStatus.text = "Detecting products..."
 
         lifecycleScope.launch {
             try {
@@ -694,7 +690,6 @@ class PublishPantryActivity : AppCompatActivity() {
                     if (label.confidence >= 0.6f) {
                         val labelText = label.text
 
-                        // ✅ ACCEPT ANYTHING FOOD-RELATED (no strict filter!)
                         if (isFoodRelated(labelText)) {
                             allProducts.add(
                                 DetectedProduct(
@@ -704,39 +699,33 @@ class PublishPantryActivity : AppCompatActivity() {
                                     approved = false
                                 )
                             )
-                            Log.d("Detection", "✅ Added: $labelText")
+                            Log.d("Detection", "Added: $labelText")
                         } else {
-                            Log.d("Detection", "⚠️ Skipped: $labelText")
+                            Log.d("Detection", "Skipped: $labelText")
                         }
                     }
                 }
 
-                // Step 3: Display results
                 if (allProducts.isNotEmpty()) {
                     displayResults(allProducts, "ML Kit")
                 } else {
                     binding.progressBar.visibility = View.GONE
-                    binding.tvDetectionStatus.text = "❌ No food items detected. Try another photo."
+                    binding.tvDetectionStatus.text = "No food items detected. Try another photo."
                     binding.btnProceedManually.visibility = View.VISIBLE
                 }
 
             } catch (e: Exception) {
                 binding.progressBar.visibility = View.GONE
-                binding.tvDetectionStatus.text = "❌ Detection failed."
+                binding.tvDetectionStatus.text = "Detection failed."
                 binding.btnProceedManually.visibility = View.VISIBLE
                 Log.e("Detection", "Error", e)
             }
         }
     }
 
-    /**
-     * ULTRA PERMISSIVE food filter
-     * Accept almost anything food-related!
-     */
     private fun isFoodRelated(label: String): Boolean {
         val lower = label.lowercase()
 
-        // ✅ Accept these keywords
         val foodKeywords = listOf(
             "food", "vegetable", "fruit", "plant", "produce", "ingredient",
             "dairy", "milk", "cheese", "yogurt", "butter", "cream",
@@ -745,10 +734,9 @@ class PublishPantryActivity : AppCompatActivity() {
             "meat", "chicken", "beef", "pork", "fish", "seafood",
             "bread", "grain", "rice", "pasta", "cereal",
             "natural foods", "whole food", "fresh", "organic",
-            "bottle", "package", "container", "jar", "carton" // For packaged items
+            "bottle", "package", "container", "jar", "carton"
         )
 
-        // ❌ Reject these keywords
         val rejectKeywords = listOf(
             "person", "human", "face", "hand", "finger",
             "table", "wood", "furniture", "room", "wall",

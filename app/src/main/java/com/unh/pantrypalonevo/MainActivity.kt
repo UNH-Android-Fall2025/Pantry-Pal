@@ -11,10 +11,6 @@ import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-/**
- * FIXED MainActivity - Removed binding error
- * Firebase authentication check happens first, then routes to appropriate activity
- */
 class MainActivity : ComponentActivity() {
     
     private val notificationPermissionLauncher = registerForActivityResult(

@@ -155,7 +155,7 @@ class PublishPantryFormActivity : AppCompatActivity() {
             "lastUpdated" to FieldValue.serverTimestamp()
         )
 
-        Log.d("PublishPantryForm", "📝 Publishing pantry to Firestore:")
+        Log.d("PublishPantryForm", "Publishing pantry to Firestore:")
         Log.d("PublishPantryForm", "   - Name: $name")
         Log.d("PublishPantryForm", "   - Address: $address")
         Log.d("PublishPantryForm", "   - Owner ID: ${currentUser.uid}")
@@ -216,7 +216,7 @@ class PublishPantryFormActivity : AppCompatActivity() {
                                 // Commit all items in batch
                                 batch.commit()
                                     .addOnSuccessListener {
-                                        Log.d("PublishPantryForm", "✅ Pantry published successfully!")
+                                        Log.d("PublishPantryForm", "Pantry published successfully")
                                         Log.d("PublishPantryForm", "   - Pantry ID: ${pantryRef.id}")
                                         Log.d("PublishPantryForm", "   - Donor ID: ${currentUser.uid}")
                                         Log.d("PublishPantryForm", "   - Items saved: ${pantryItems.size}")
@@ -226,25 +226,25 @@ class PublishPantryFormActivity : AppCompatActivity() {
                                     }
                                     .addOnFailureListener { error ->
                                         binding.btnConfirm.isEnabled = true
-                                        Log.e("PublishPantryForm", "❌ Error saving items: ${error.message}")
+                                        Log.e("PublishPantryForm", "Error saving items: ${error.message}")
                                         Toast.makeText(this, "Error saving items: ${error.message}", Toast.LENGTH_LONG).show()
                                     }
                             }
                             .addOnFailureListener { error ->
                                 binding.btnConfirm.isEnabled = true
-                                Log.e("PublishPantryForm", "❌ Error creating donor: ${error.message}")
+                                Log.e("PublishPantryForm", "Error creating donor: ${error.message}")
                                 Toast.makeText(this, "Error creating donor: ${error.message}", Toast.LENGTH_LONG).show()
                             }
                     }
                     .addOnFailureListener { error ->
                         binding.btnConfirm.isEnabled = true
-                        Log.e("PublishPantryForm", "❌ Error creating pantry: ${error.message}")
+                        Log.e("PublishPantryForm", "Error creating pantry: ${error.message}")
                         Toast.makeText(this, "Error creating pantry: ${error.message}", Toast.LENGTH_LONG).show()
                     }
             }
             .addOnFailureListener { error ->
                 binding.btnConfirm.isEnabled = true
-                Log.e("PublishPantryForm", "❌ Error checking pantry: ${error.message}")
+                Log.e("PublishPantryForm", "Error checking pantry: ${error.message}")
                 Toast.makeText(this, "Error checking pantry: ${error.message}", Toast.LENGTH_LONG).show()
             }
             .addOnFailureListener { error ->

@@ -141,7 +141,7 @@ class PantryProductsActivity : AppCompatActivity() {
         Log.d("PantryProducts", "pantryAddress: $pantryAddress")
         
         if (pantryId.isNullOrBlank()) {
-            Log.w("PantryProducts", "⚠️ Missing pantryId, trying to find pantry by name/address")
+            Log.w("PantryProducts", "Missing pantryId, trying to find pantry by name/address")
             findPantryAndLoadProducts()
             return
         }
@@ -151,19 +151,19 @@ class PantryProductsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                Log.d("PantryProducts", "📂 Fetching pantry document: $pantryId")
+                Log.d("PantryProducts", "Fetching pantry document: $pantryId")
                 val pantryRef = firestore.collection("pantries").document(pantryId!!)
                 val pantryDoc = pantryRef.get().await()
                 
                 if (!pantryDoc.exists()) {
-                    Log.w("PantryProducts", "❌ Pantry document not found: $pantryId")
+                    Log.w("PantryProducts", "Pantry document not found: $pantryId")
                     Log.w("PantryProducts", "   Trying to find by name: $pantryName, address: $pantryAddress")
                     Toast.makeText(this@PantryProductsActivity, "Pantry not found. Trying to search by name...", Toast.LENGTH_SHORT).show()
                     findPantryAndLoadProducts()
                     return@launch
                 }
                 
-                Log.d("PantryProducts", "✅ Pantry document exists")
+                Log.d("PantryProducts", "Pantry document exists")
                 Log.d("PantryProducts", "Pantry data: ${pantryDoc.data}")
                 
                 products.clear()
@@ -177,7 +177,7 @@ class PantryProductsActivity : AppCompatActivity() {
                 }
                 
                 // Try new structure first: pantries/{pantryId}/donors/{donorId}/items/{itemId}
-                Log.d("PantryProducts", "🔍 Checking for donors subcollection at: pantries/$currentPantryId/donors")
+                Log.d("PantryProducts", "Checking for donors subcollection at: pantries/$currentPantryId/donors")
                 var donorsSnapshot = try {
                     pantryRef.collection("donors").get().await()
                 } catch (e: Exception) {
@@ -189,14 +189,14 @@ class PantryProductsActivity : AppCompatActivity() {
                 
                 if (!donorsSnapshot.isEmpty) {
                     // New structure: Read from donors/items subcollections
-                    Log.d("PantryProducts", "✅ Using new structure: donors/items")
+                    Log.d("PantryProducts", "Using new structure: donors/items")
                     Log.d("PantryProducts", "   Found ${donorsSnapshot.size()} donor(s)")
                     
                     var totalItems = 0
                     for (donorDoc in donorsSnapshot.documents) {
                         val donorId = donorDoc.id
                         val donorName = donorDoc.getString("name") ?: "Unknown"
-                        Log.d("PantryProducts", "  📦 Processing donor: $donorId (name: $donorName)")
+                        Log.d("PantryProducts", "Processing donor: $donorId (name: $donorName)")
                         Log.d("PantryProducts", "     Path: pantries/$currentPantryId/donors/$donorId/items")
                         
                         try {
@@ -205,14 +205,14 @@ class PantryProductsActivity : AppCompatActivity() {
                             totalItems += itemsSnapshot.size()
                             
                             if (itemsSnapshot.isEmpty) {
-                                Log.w("PantryProducts", "     ⚠️ No items in subcollection for donor $donorId")
+                                Log.w("PantryProducts", "No items in subcollection for donor $donorId")
                             }
                             
                             itemsSnapshot.documents.forEach { itemDoc ->
                                 val itemData = itemDoc.data ?: emptyMap()
                                 val itemName = itemData["name"] as? String ?: ""
                                 val itemQuantity = (itemData["quantity"] as? Long ?: 1).toInt()
-                                Log.d("PantryProducts", "       ✅ Item ID: ${itemDoc.id}")
+                                Log.d("PantryProducts", "Item ID: ${itemDoc.id}")
                                 Log.d("PantryProducts", "          Name: $itemName")
                                 Log.d("PantryProducts", "          Quantity: $itemQuantity")
                                 Log.d("PantryProducts", "          Data: $itemData")
@@ -232,21 +232,21 @@ class PantryProductsActivity : AppCompatActivity() {
                                 )
                             }
                         } catch (e: Exception) {
-                            Log.e("PantryProducts", "     ❌ Error loading items for donor $donorId", e)
+                            Log.e("PantryProducts", "Error loading items for donor $donorId", e)
                             e.printStackTrace()
                         }
                     }
                     
-                    Log.d("PantryProducts", "✅ Loaded ${products.size} items from ${donorsSnapshot.size()} donors (new structure)")
+                    Log.d("PantryProducts", "Loaded ${products.size} items from ${donorsSnapshot.size()} donors (new structure)")
                     
                     if (products.isEmpty()) {
-                        Log.w("PantryProducts", "⚠️ No items found in any donor subcollection")
+                        Log.w("PantryProducts", "No items found in any donor subcollection")
                         Log.w("PantryProducts", "   Total donors checked: ${donorsSnapshot.size()}")
                         Log.w("PantryProducts", "   This pantry may have been published without items")
                         Log.w("PantryProducts", "   OR items were not saved correctly during publishing")
                         
                         // Try to diagnose: Check all donors and their items
-                        Log.d("PantryProducts", "   🔍 DIAGNOSTIC: Checking all donors and items...")
+                        Log.d("PantryProducts", "DIAGNOSTIC: Checking all donors and items...")
                         for (donorDoc in donorsSnapshot.documents) {
                             Log.d("PantryProducts", "     Donor ID: ${donorDoc.id}")
                             Log.d("PantryProducts", "     Donor data: ${donorDoc.data}")
@@ -269,12 +269,12 @@ class PantryProductsActivity : AppCompatActivity() {
                     }
                 } else {
                     // Fallback to old structure: products array in pantry document
-                    Log.d("PantryProducts", "🔍 No donors found, checking for products array...")
+                    Log.d("PantryProducts", "No donors found, checking for products array...")
                     @Suppress("UNCHECKED_CAST")
                     val productsList = pantryDoc.get("products") as? List<Map<String, Any>>?
                     
                     if (productsList != null && productsList.isNotEmpty()) {
-                        Log.d("PantryProducts", "✅ Using old structure: products array")
+                        Log.d("PantryProducts", "Using old structure: products array")
                         Log.d("PantryProducts", "Found ${productsList.size} products in array")
                         
                         // Try to get donor ID from pantry (for old structure, use ownerId if available)
@@ -295,11 +295,11 @@ class PantryProductsActivity : AppCompatActivity() {
                             )
                         })
                         
-                        Log.d("PantryProducts", "✅ Loaded ${products.size} items from products array (old structure)")
+                        Log.d("PantryProducts", "Loaded ${products.size} items from products array (old structure)")
                     } else {
-                        Log.w("PantryProducts", "❌ No products found in either structure")
+                        Log.w("PantryProducts", "No products found in either structure")
                         Log.w("PantryProducts", "Pantry document fields: ${pantryDoc.data?.keys}")
-                        Log.w("PantryProducts", "⚠️ This pantry was published but has no items")
+                        Log.w("PantryProducts", "This pantry was published but has no items")
                         Toast.makeText(
                             this@PantryProductsActivity, 
                             "No products found. Make sure you added items when publishing this pantry.", 
@@ -327,13 +327,13 @@ class PantryProductsActivity : AppCompatActivity() {
                 Log.d("PantryProducts", "   RecyclerView height: ${binding.rvProducts.height}")
 
             } catch (e: Exception) {
-                Log.e("PantryProducts", "❌ Error loading products", e)
+                Log.e("PantryProducts", "Error loading products", e)
                 e.printStackTrace()
                 binding.progressBar.visibility = View.GONE
                 
                 // Check if it's a permission error
                 if (e is FirebaseFirestoreException && e.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
-                    Log.e("PantryProducts", "⚠️ PERMISSION DENIED - Firestore rules need to be updated!")
+                    Log.e("PantryProducts", "PERMISSION DENIED - Firestore rules need to be updated")
                     Toast.makeText(
                         this@PantryProductsActivity, 
                         "Permission denied. Please check Firestore security rules.", 
@@ -354,7 +354,7 @@ class PantryProductsActivity : AppCompatActivity() {
         
         lifecycleScope.launch {
             try {
-                Log.d("PantryProducts", "🔍 Searching for pantry: name='$pantryName', address='$pantryAddress'")
+                Log.d("PantryProducts", "Searching for pantry: name='$pantryName', address='$pantryAddress'")
                 
                 // Try new schema first: pantries/{zipCode}/posts/{pantryId}
                 val zip = zipCode ?: "UNKNOWN"
@@ -374,7 +374,7 @@ class PantryProductsActivity : AppCompatActivity() {
                         val postDoc = postsSnapshot.documents.first()
                         pantryId = postDoc.id
                         zipCode = zip
-                        Log.d("PantryProducts", "✅ Found pantry in zip-based structure: $pantryId")
+                        Log.d("PantryProducts", "Found pantry in zip-based structure: $pantryId")
                         loadProducts()
                         return@launch
                     }
@@ -398,7 +398,7 @@ class PantryProductsActivity : AppCompatActivity() {
                     val foundName = doc.getString("name") ?: ""
                     val foundAddress = doc.getString("address") ?: ""
                     
-                    Log.d("PantryProducts", "✅ Found pantry in root collection")
+                    Log.d("PantryProducts", "Found pantry in root collection")
                     Log.d("PantryProducts", "   Pantry ID: $foundPantryId")
                     Log.d("PantryProducts", "   Name: $foundName (searching for: $pantryName)")
                     Log.d("PantryProducts", "   Address: $foundAddress (searching for: $pantryAddress)")
@@ -408,7 +408,7 @@ class PantryProductsActivity : AppCompatActivity() {
                     pantryId = foundPantryId
                     
                     // Verify items exist before loading
-                    Log.d("PantryProducts", "   🔍 Verifying items exist at: pantries/$foundPantryId/donors")
+                    Log.d("PantryProducts", "Verifying items exist at: pantries/$foundPantryId/donors")
                     try {
                         val verifyDonors = firestore.collection("pantries")
                             .document(foundPantryId)
@@ -416,13 +416,13 @@ class PantryProductsActivity : AppCompatActivity() {
                             .get()
                             .await()
                         
-                        Log.d("PantryProducts", "   ✅ Found ${verifyDonors.size()} donor(s) in pantry")
+                        Log.d("PantryProducts", "Found ${verifyDonors.size()} donor(s) in pantry")
                         if (!verifyDonors.isEmpty) {
                             var totalItemsCount = 0
                             for (donor in verifyDonors.documents) {
                                 val donorId = donor.id
                                 val donorName = donor.getString("name") ?: "Unknown"
-                                Log.d("PantryProducts", "     📦 Donor: $donorId (name: $donorName)")
+                                Log.d("PantryProducts", "Donor: $donorId (name: $donorName)")
                                 
                                 val items = donor.reference.collection("items").get().await()
                                 totalItemsCount += items.size()
@@ -433,23 +433,23 @@ class PantryProductsActivity : AppCompatActivity() {
                                     Log.d("PantryProducts", "          - ${item.id}: ${item.getString("name")} (qty: ${item.getLong("quantity")})")
                                 }
                             }
-                            Log.d("PantryProducts", "   ✅ Total items found: $totalItemsCount")
+                            Log.d("PantryProducts", "Total items found: $totalItemsCount")
                             
                             if (totalItemsCount == 0) {
-                                Log.w("PantryProducts", "   ⚠️ WARNING: Donors exist but no items found!")
+                                Log.w("PantryProducts", "WARNING: Donors exist but no items found")
                             }
                         } else {
-                            Log.w("PantryProducts", "   ⚠️ No donors found in pantry")
+                            Log.w("PantryProducts", "No donors found in pantry")
                         }
                     } catch (e: Exception) {
-                        Log.e("PantryProducts", "   ❌ Error verifying items: ${e.message}")
+                        Log.e("PantryProducts", "Error verifying items: ${e.message}")
                         e.printStackTrace()
                     }
                     
                     // Load products (will handle both old and new structure)
                     loadProducts()
                 } else {
-                    Log.w("PantryProducts", "❌ Pantry not found by name/address")
+                    Log.w("PantryProducts", "Pantry not found by name/address")
                     Log.w("PantryProducts", "   Searched for: name='$pantryName', address='$pantryAddress'")
                     
                     // Try a broader search - just by name
@@ -479,7 +479,7 @@ class PantryProductsActivity : AppCompatActivity() {
 
                 binding.progressBar.visibility = View.GONE
             } catch (e: Exception) {
-                Log.e("PantryProducts", "❌ Error finding pantry", e)
+                Log.e("PantryProducts", "Error finding pantry", e)
                 e.printStackTrace()
                 binding.progressBar.visibility = View.GONE
                 Toast.makeText(this@PantryProductsActivity, "Error finding pantry: ${e.message}", Toast.LENGTH_LONG).show()

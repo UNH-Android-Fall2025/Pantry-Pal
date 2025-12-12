@@ -154,6 +154,17 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
     
+    // Shared recipes collection (public read access)
+    match /shared_recipes/{recipeId} {
+      // Anyone can read shared recipes (no authentication required)
+      allow read: if true;
+      
+      // Only authenticated users can create/update/delete
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+    
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;

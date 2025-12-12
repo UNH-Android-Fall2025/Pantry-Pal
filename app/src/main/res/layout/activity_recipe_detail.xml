@@ -22,6 +22,20 @@
             android:textColor="#212121"
             android:paddingBottom="16dp" />
 
+        <!-- Share Recipe Button -->
+        <Button
+            android:id="@+id/btnShareRecipe"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📤 Share Recipe"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:drawablePadding="8dp" />
+
         <!-- Time and Difficulty -->
         <LinearLayout
             android:layout_width="match_parent"

@@ -39,7 +39,6 @@ class DeepSeekService private constructor(context: Context) {
     }
     
     init {
-        // Get API key from resources (you'll need to add this to strings.xml)
         val resourceId = context.resources.getIdentifier(
             "deepseek_api_key",
             "string",
@@ -48,33 +47,25 @@ class DeepSeekService private constructor(context: Context) {
         apiKey = if (resourceId != 0) {
             val key = context.getString(resourceId)
             if (key.isEmpty() || key == "YOUR_DEEPSEEK_API_KEY_HERE") {
-                Log.w(TAG, "⚠️ DeepSeek API key not configured. Add it to strings.xml")
+                Log.w(TAG, "DeepSeek API key not configured")
             } else {
-                Log.d(TAG, "✅ DeepSeek API key loaded")
+                Log.d(TAG, "DeepSeek API key loaded")
             }
             key
         } else {
-            Log.w(TAG, "⚠️ DeepSeek API key resource not found in strings.xml")
+            Log.w(TAG, "DeepSeek API key resource not found")
             ""
         }
     }
     
-    /**
-     * Generate recipes for given items using DeepSeek API
-     * @param items List of item names to generate recipes for
-     * @return List of Recipe objects
-     */
     suspend fun generateRecipes(items: List<String>): List<Recipe> = withContext(Dispatchers.IO) {
         if (apiKey.isEmpty() || apiKey == "YOUR_DEEPSEEK_API_KEY_HERE") {
-            Log.e(TAG, "❌ DeepSeek API key not configured or empty")
-            Log.e(TAG, "❌ API key length: ${apiKey.length}")
+            Log.e(TAG, "DeepSeek API key not configured or empty")
             return@withContext emptyList()
         }
         
-        Log.d(TAG, "✅ API key loaded (length: ${apiKey.length}, starts with: ${apiKey.take(7)})")
-        
         if (items.isEmpty()) {
-            Log.w(TAG, "⚠️ No items provided for recipe generation")
+            Log.w(TAG, "No items provided for recipe generation")
             return@withContext emptyList()
         }
         
@@ -91,8 +82,7 @@ Each recipe needs: title, ingredients array, steps array (3-5 steps), time, diff
 
 Return exactly 10 recipes as JSON array only."""
             
-            Log.d(TAG, "🔍 Generating recipes for: $itemsText")
-            Log.d(TAG, "🔑 API Key present: ${apiKey.isNotEmpty()}")
+            Log.d(TAG, "Generating recipes for: $itemsText")
             
             val requestBody = JSONObject().apply {
                 put("model", "deepseek-chat")
@@ -103,7 +93,7 @@ Return exactly 10 recipes as JSON array only."""
                     })
                 })
                 put("temperature", 0.7)
-                put("max_tokens", 5000)  // Reduced slightly for faster response
+                put("max_tokens", 5000)
             }
             
             val request = Request.Builder()
@@ -116,98 +106,76 @@ Return exactly 10 recipes as JSON array only."""
             val response = client.newCall(request).execute()
             val responseBody = response.body?.string()
             
-            Log.d(TAG, "📡 DeepSeek API response code: ${response.code}")
+            Log.d(TAG, "API response code: ${response.code}")
             
             if (response.isSuccessful && responseBody != null) {
-                Log.d(TAG, "✅ DeepSeek API response received (length: ${responseBody.length})")
-                Log.d(TAG, "📄 Response preview: ${responseBody.take(300)}")
-                
                 val recipes = parseDeepSeekResponse(responseBody)
-                Log.d(TAG, "📝 Successfully parsed ${recipes.size} recipes")
+                Log.d(TAG, "Parsed ${recipes.size} recipes")
                 
                 if (recipes.isEmpty()) {
-                    Log.e(TAG, "❌ No recipes parsed! Full response: ${responseBody.take(1000)}")
+                    Log.e(TAG, "No recipes parsed. Response: ${responseBody.take(1000)}")
                 }
                 
                 return@withContext recipes
             } else {
                 val errorPreview = responseBody?.take(500) ?: "No response body"
-                Log.e(TAG, "❌ DeepSeek API error: ${response.code}")
-                Log.e(TAG, "❌ Error details: $errorPreview")
+                Log.e(TAG, "API error: ${response.code} - $errorPreview")
                 
-                // Try to parse error message
                 try {
                     val errorJson = JSONObject(responseBody ?: "{}")
                     if (errorJson.has("error")) {
                         val error = errorJson.getJSONObject("error")
                         val errorMsg = error.optString("message", "Unknown error")
-                        Log.e(TAG, "❌ API Error message: $errorMsg")
+                        Log.e(TAG, "API error message: $errorMsg")
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "❌ Could not parse error response")
+                    Log.e(TAG, "Could not parse error response")
                 }
                 
                 return@withContext emptyList()
             }
             
         } catch (e: java.net.SocketTimeoutException) {
-            Log.e(TAG, "❌ Request timeout - API took too long to respond", e)
-            Log.e(TAG, "💡 Try again or check your internet connection")
+            Log.e(TAG, "Request timeout", e)
             return@withContext emptyList()
         } catch (e: java.net.UnknownHostException) {
-            Log.e(TAG, "❌ Network error - Cannot reach DeepSeek API", e)
-            Log.e(TAG, "💡 Check your internet connection")
+            Log.e(TAG, "Network error - cannot reach API", e)
             return@withContext emptyList()
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error generating recipes: ${e.javaClass.simpleName}", e)
-            Log.e(TAG, "❌ Error message: ${e.message}")
-            e.printStackTrace()
+            Log.e(TAG, "Error generating recipes: ${e.message}", e)
             return@withContext emptyList()
         }
     }
     
-    /**
-     * Parse DeepSeek API response and extract recipes
-     */
     private fun parseDeepSeekResponse(json: String): List<Recipe> {
         return try {
-            Log.d(TAG, "🔍 Starting to parse response...")
             val jsonObject = JSONObject(json)
             
-            // Check for error in response
             if (jsonObject.has("error")) {
                 val error = jsonObject.getJSONObject("error")
                 val errorMsg = error.optString("message", "Unknown error")
-                Log.e(TAG, "❌ API returned error: $errorMsg")
+                Log.e(TAG, "API returned error: $errorMsg")
                 return emptyList()
             }
             
             val choices = jsonObject.getJSONArray("choices")
             
             if (choices.length() == 0) {
-                Log.w(TAG, "⚠️ No choices in DeepSeek response")
+                Log.w(TAG, "No choices in response")
                 return emptyList()
             }
             
             val message = choices.getJSONObject(0).getJSONObject("message")
             val content = message.getString("content")
             
-            Log.d(TAG, "📄 Content extracted (length: ${content.length})")
-            Log.d(TAG, "📄 Content preview: ${content.take(200)}")
-            
-            // Try to extract JSON from the content (might have markdown code blocks)
             val jsonContent = extractJsonFromContent(content)
             
-            Log.d(TAG, "📄 Extracted JSON (length: ${jsonContent.length})")
-            Log.d(TAG, "📄 Extracted JSON preview: ${jsonContent.take(200)}")
-            
             if (jsonContent.isEmpty() || !jsonContent.startsWith("[")) {
-                Log.e(TAG, "❌ Invalid JSON content extracted")
+                Log.e(TAG, "Invalid JSON content extracted")
                 return emptyList()
             }
             
             val recipesArray = JSONArray(jsonContent)
-            Log.d(TAG, "📊 Found ${recipesArray.length()} recipes in JSON array")
             
             val recipes = mutableListOf<Recipe>()
             
@@ -219,54 +187,43 @@ Return exactly 10 recipes as JSON array only."""
                         ingredients = try {
                             parseStringArray(recipeObj.getJSONArray("ingredients"))
                         } catch (e: Exception) {
-                            Log.w(TAG, "⚠️ Could not parse ingredients for recipe $i: ${e.message}")
+                            Log.w(TAG, "Could not parse ingredients for recipe $i: ${e.message}")
                             emptyList()
                         },
                         steps = try {
                             parseStringArray(recipeObj.getJSONArray("steps"))
                         } catch (e: Exception) {
-                            Log.w(TAG, "⚠️ Could not parse steps for recipe $i: ${e.message}")
+                            Log.w(TAG, "Could not parse steps for recipe $i: ${e.message}")
                             emptyList()
                         },
                         time = recipeObj.optString("time", "N/A"),
                         difficulty = recipeObj.optString("difficulty", "Medium")
                     )
                     recipes.add(recipe)
-                    Log.d(TAG, "✅ Parsed recipe ${i + 1}: ${recipe.title}")
                 } catch (e: Exception) {
-                    Log.e(TAG, "❌ Error parsing recipe at index $i: ${e.message}")
-                    e.printStackTrace()
+                    Log.e(TAG, "Error parsing recipe at index $i: ${e.message}")
                 }
             }
             
-            Log.d(TAG, "✅ Successfully parsed ${recipes.size} out of ${recipesArray.length()} recipes")
+            Log.d(TAG, "Parsed ${recipes.size} out of ${recipesArray.length()} recipes")
             recipes
             
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error parsing DeepSeek response: ${e.message}")
-            Log.e(TAG, "❌ Response JSON preview: ${json.take(500)}")
-            e.printStackTrace()
+            Log.e(TAG, "Error parsing response: ${e.message}")
             emptyList()
         }
     }
     
-    /**
-     * Extract JSON from content (handles markdown code blocks and extra text)
-     */
     private fun extractJsonFromContent(content: String): String {
         var cleaned = content.trim()
         
-        // Find the JSON array start and end
         val jsonStart = cleaned.indexOf('[')
         val jsonEnd = cleaned.lastIndexOf(']')
         
         if (jsonStart >= 0 && jsonEnd > jsonStart) {
-            // Extract JSON array
             cleaned = cleaned.substring(jsonStart, jsonEnd + 1)
         } else {
-            // Try to remove markdown code blocks
             if (cleaned.contains("```")) {
-                // Find content between code blocks
                 val startMarker = cleaned.indexOf("```")
                 val endMarker = cleaned.lastIndexOf("```")
                 
@@ -284,10 +241,8 @@ Return exactly 10 recipes as JSON array only."""
             }
         }
         
-        // Final cleanup
         cleaned = cleaned.trim()
         
-        // Ensure it's valid JSON array
         if (!cleaned.startsWith("[")) {
             val startIdx = cleaned.indexOf('[')
             if (startIdx >= 0) {
@@ -305,9 +260,6 @@ Return exactly 10 recipes as JSON array only."""
         return cleaned.trim()
     }
     
-    /**
-     * Parse JSON array to List<String>
-     */
     private fun parseStringArray(jsonArray: JSONArray): List<String> {
         val list = mutableListOf<String>()
         for (i in 0 until jsonArray.length()) {

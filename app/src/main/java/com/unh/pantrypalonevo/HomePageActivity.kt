@@ -81,7 +81,7 @@ class HomePageActivity : AppCompatActivity() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // ✅ Initialize Places Service
+        // Initialize Places Service
         placesService = PlacesService.getInstance(this)
 
         // Check if location was already enabled previously
@@ -94,7 +94,7 @@ class HomePageActivity : AppCompatActivity() {
             fetchUserLocation()
         }
 
-        // ✅ Load pantries from Places API and Firestore
+        // Load pantries from Places API and Firestore
         loadPantries()
 
         binding.btnEnableLocation.setOnClickListener {
@@ -105,7 +105,7 @@ class HomePageActivity : AppCompatActivity() {
             requestLocationPermissionAndFetch()
         }
 
-        // ✅ Search filter - searches both local list and Google Places API
+        // Search filter - searches both local list and Google Places API
         binding.btnSearch.setOnClickListener {
             val query = binding.etSearch.text.toString().trim()
             if (query.isEmpty()) {
@@ -380,7 +380,7 @@ class HomePageActivity : AppCompatActivity() {
                 this, Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            android.util.Log.e("HomePageActivity", "❌ Location permission not granted")
+            android.util.Log.e("HomePageActivity", "Location permission not granted")
             return
         }
 
@@ -389,7 +389,7 @@ class HomePageActivity : AppCompatActivity() {
             .addOnSuccessListener { location: Location? ->
                 if (location != null) {
                     userLocation = location
-                    android.util.Log.d("HomePageActivity", "✅ Location received:")
+                    android.util.Log.d("HomePageActivity", "Location received:")
                     android.util.Log.d("HomePageActivity", "   - Lat: ${location.latitude}")
                     android.util.Log.d("HomePageActivity", "   - Lng: ${location.longitude}")
                     android.util.Log.d("HomePageActivity", "   - Accuracy: ${location.accuracy}m")
@@ -401,12 +401,12 @@ class HomePageActivity : AppCompatActivity() {
                     Toast.makeText(this, "Location enabled successfully", Toast.LENGTH_SHORT).show()
                     loadPantries()
                 } else {
-                    android.util.Log.w("HomePageActivity", "⚠️ Location is null - may need to wait for GPS")
+                    android.util.Log.w("HomePageActivity", "Location is null - may need to wait for GPS")
                     Toast.makeText(this, "Unable to get location. Try moving to get GPS signal.", Toast.LENGTH_LONG).show()
                 }
             }
             .addOnFailureListener { e ->
-                android.util.Log.e("HomePageActivity", "❌ Location fetch failed: ${e.message}")
+                android.util.Log.e("HomePageActivity", "Location fetch failed: ${e.message}")
                 e.printStackTrace()
                 Toast.makeText(this, "Error fetching location: ${e.message}", Toast.LENGTH_LONG).show()
             }

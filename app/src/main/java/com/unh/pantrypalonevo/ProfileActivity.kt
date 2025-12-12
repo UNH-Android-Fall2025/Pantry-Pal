@@ -169,7 +169,7 @@ class ProfileActivity : AppCompatActivity() {
 
         binding.btnLogout.setOnClickListener { showLogoutDialog() }
 
-        // ✅ Bottom navigation buttons
+        // Bottom navigation buttons
         binding.btnHome.setOnClickListener {
             startActivity(Intent(this, HomePageActivity::class.java))
             finish()

@@ -69,6 +69,27 @@
             android:name=".RecipeDetailActivity"
             android:exported="false"
             android:parentActivityName=".RecipeActivity" />
+        
+        <!-- Shared Recipe View Activity (Public Access) -->
+        <activity
+            android:name=".SharedRecipeViewActivity"
+            android:exported="true"
+            android:parentActivityName=".RecipeActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Deep link: pantrypal://recipe/{recipeId} -->
+                <data
+                    android:scheme="pantrypal"
+                    android:host="recipe" />
+                <!-- Web link: https://pantrypal.app/recipe/{recipeId} -->
+                <data
+                    android:scheme="https"
+                    android:host="pantrypal.app"
+                    android:pathPrefix="/recipe" />
+            </intent-filter>
+        </activity>
 
         <!-- Pantry Related Activities -->
         <activity android:name=".PublishPantryActivity" />

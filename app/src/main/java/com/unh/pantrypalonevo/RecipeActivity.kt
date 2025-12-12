@@ -177,7 +177,7 @@ class RecipeActivity : AppCompatActivity() {
                     binding.tvLoading.visibility = View.VISIBLE
                     binding.btnCancel.visibility = View.VISIBLE
                     
-                    android.util.Log.e("RecipeActivity", "❌ No recipes generated. Check Logcat for DeepSeekService logs.")
+                    android.util.Log.e("RecipeActivity", "No recipes generated. Check Logcat for DeepSeekService logs.")
                     
                     Toast.makeText(
                         this@RecipeActivity,

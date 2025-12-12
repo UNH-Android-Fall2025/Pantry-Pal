@@ -61,14 +61,14 @@ class PlacesService private constructor(context: Context) {
             val key = context.getString(resourceId)
             // Log API key status (first 10 chars only for security)
             if (key.isEmpty() || key == "YOUR_API_KEY_HERE") {
-                Log.e(TAG, "⚠️ API KEY ISSUE: API key is empty or placeholder!")
-                Log.e(TAG, "⚠️ Please add your Google Places API key to strings.xml")
+                Log.e(TAG, "API KEY ISSUE: API key is empty or placeholder")
+                Log.e(TAG, "Please add your Google Places API key to strings.xml")
             } else {
-                Log.d(TAG, "✅ API Key loaded: ${key.take(10)}... (length: ${key.length})")
+                Log.d(TAG, "API Key loaded: ${key.take(10)}... (length: ${key.length})")
             }
             key
         } else {
-            Log.e(TAG, "❌ API KEY NOT FOUND: google_places_api_key not found in strings.xml!")
+            Log.e(TAG, "API KEY NOT FOUND: google_places_api_key not found in strings.xml")
             ""
         }
         
@@ -76,9 +76,9 @@ class PlacesService private constructor(context: Context) {
         if (!Places.isInitialized()) {
             if (apiKey.isNotEmpty() && apiKey != "YOUR_API_KEY_HERE") {
                 Places.initialize(context, apiKey)
-                Log.d(TAG, "✅ Places SDK initialized successfully")
+                Log.d(TAG, "Places SDK initialized successfully")
             } else {
-                Log.e(TAG, "❌ Places SDK NOT initialized - invalid API key")
+                Log.e(TAG, "Places SDK NOT initialized - invalid API key")
             }
         }
         placesClient = Places.createClient(context)
@@ -175,21 +175,17 @@ class PlacesService private constructor(context: Context) {
      * This method uses OkHttp to call the Places API REST endpoint
      */
     suspend fun searchNearbyPantriesRestApi(location: Location): List<Pantry> = withContext(Dispatchers.IO) {
-        // ========== DEBUG: API KEY CHECK ==========
-        Log.d(TAG, "═══════════════════════════════════════════════════")
-        Log.d(TAG, "🔍 DEBUG: Starting Places API Search")
-        Log.d(TAG, "═══════════════════════════════════════════════════")
+        Log.d(TAG, "Starting Places API Search")
         
         if (apiKey.isEmpty() || apiKey == "YOUR_API_KEY_HERE") {
-            Log.e(TAG, "❌ API KEY ERROR: Invalid or missing API key!")
+            Log.e(TAG, "API KEY ERROR: Invalid or missing API key")
             Log.e(TAG, "   - API key length: ${apiKey.length}")
             Log.e(TAG, "   - Is placeholder: ${apiKey == "YOUR_API_KEY_HERE"}")
             Log.e(TAG, "   - Fix: Add your API key to app/src/main/res/values/strings.xml")
             return@withContext emptyList()
         }
         
-        // ========== DEBUG: LOCATION CHECK ==========
-        Log.d(TAG, "📍 LOCATION INFO:")
+        Log.d(TAG, "LOCATION INFO:")
         Log.d(TAG, "   - Latitude: ${location.latitude}")
         Log.d(TAG, "   - Longitude: ${location.longitude}")
         Log.d(TAG, "   - Accuracy: ${location.accuracy}m")
@@ -197,7 +193,7 @@ class PlacesService private constructor(context: Context) {
         
         // Validate location
         if (location.latitude == 0.0 && location.longitude == 0.0) {
-            Log.e(TAG, "❌ LOCATION ERROR: Invalid location (0,0)")
+            Log.e(TAG, "LOCATION ERROR: Invalid location (0,0)")
             return@withContext emptyList()
         }
         
@@ -227,8 +223,7 @@ class PlacesService private constructor(context: Context) {
             
             // Try each search
             for ((index, url) in searches.withIndex()) {
-                Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                Log.d(TAG, "🌐 API CALL #${index + 1}:")
+                Log.d(TAG, "API CALL #${index + 1}:")
                 Log.d(TAG, "   URL: $url")
                 
                 val request = Request.Builder()
@@ -240,7 +235,7 @@ class PlacesService private constructor(context: Context) {
                 val responseTime = System.currentTimeMillis() - startTime
                 val responseBody = response.body?.string()
                 
-                Log.d(TAG, "📡 RESPONSE:")
+                Log.d(TAG, "RESPONSE:")
                 Log.d(TAG, "   - HTTP Code: ${response.code}")
                 Log.d(TAG, "   - Response Time: ${responseTime}ms")
                 Log.d(TAG, "   - Response Body (first 500 chars): ${responseBody?.take(500)}")
@@ -250,22 +245,22 @@ class PlacesService private constructor(context: Context) {
                     val status = jsonObject.optString("status", "UNKNOWN")
                     val errorMessage = jsonObject.optString("error_message", "")
                     
-                    Log.d(TAG, "📊 API STATUS: $status")
+                    Log.d(TAG, "API STATUS: $status")
                     if (errorMessage.isNotEmpty()) {
-                        Log.e(TAG, "   ⚠️ Error Message: $errorMessage")
+                        Log.e(TAG, "Error Message: $errorMessage")
                     }
                     
                     when (status) {
                         "OK" -> {
                             val results = parsePlacesJson(responseBody, location)
                             allResults.addAll(results)
-                            Log.d(TAG, "   ✅ SUCCESS: Found ${results.size} places")
+                            Log.d(TAG, "SUCCESS: Found ${results.size} places")
                         }
                         "ZERO_RESULTS" -> {
-                            Log.w(TAG, "   ⚠️ No results found for this search")
+                            Log.w(TAG, "No results found for this search")
                         }
                         "REQUEST_DENIED" -> {
-                            Log.e(TAG, "   ❌ REQUEST DENIED!")
+                            Log.e(TAG, "REQUEST DENIED")
                             Log.e(TAG, "   Possible causes:")
                             Log.e(TAG, "   1. API key restrictions blocking this app")
                             Log.e(TAG, "   2. Places API not enabled")
@@ -273,14 +268,14 @@ class PlacesService private constructor(context: Context) {
                             Log.e(TAG, "   4. API key invalid")
                         }
                         "OVER_QUERY_LIMIT" -> {
-                            Log.e(TAG, "   ❌ QUOTA EXCEEDED: API quota limit reached")
+                            Log.e(TAG, "QUOTA EXCEEDED: API quota limit reached")
                         }
                         else -> {
-                            Log.e(TAG, "   ❌ UNKNOWN ERROR: Status = $status")
+                            Log.e(TAG, "UNKNOWN ERROR: Status = $status")
                         }
                     }
                 } else {
-                    Log.e(TAG, "   ❌ HTTP ERROR: ${response.code} - ${response.message}")
+                    Log.e(TAG, "HTTP ERROR: ${response.code} - ${response.message}")
                 }
             }
             
@@ -316,18 +311,16 @@ class PlacesService private constructor(context: Context) {
             // Remove duplicates and return
             val uniqueResults = allResults.distinctBy { "${it.name}_${it.address}" }
             
-            Log.d(TAG, "═══════════════════════════════════════════════════")
-            Log.d(TAG, "📊 FINAL RESULTS:")
+            Log.d(TAG, "FINAL RESULTS:")
             Log.d(TAG, "   - Total places found: ${allResults.size}")
             Log.d(TAG, "   - Unique places: ${uniqueResults.size}")
             Log.d(TAG, "   - Returning: ${uniqueResults.take(MAX_RESULTS).size} places")
-            Log.d(TAG, "═══════════════════════════════════════════════════")
             
             return@withContext uniqueResults.take(MAX_RESULTS)
             
         } catch (e: Exception) {
             Log.e(TAG, "═══════════════════════════════════════════════════")
-            Log.e(TAG, "❌ EXCEPTION in Places API search:")
+            Log.e(TAG, "EXCEPTION in Places API search:")
             Log.e(TAG, "   - Error: ${e.javaClass.simpleName}")
             Log.e(TAG, "   - Message: ${e.message}")
             Log.e(TAG, "   - Stack trace:")
