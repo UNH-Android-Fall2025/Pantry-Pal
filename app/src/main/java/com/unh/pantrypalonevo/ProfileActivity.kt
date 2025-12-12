@@ -149,6 +149,14 @@ class ProfileActivity : AppCompatActivity() {
             startActivity(Intent(this, PublishPantryActivity::class.java))
         }
 
+        binding.btnMyOrders.setOnClickListener {
+            startActivity(Intent(this, OrderHistoryActivity::class.java))
+        }
+
+        binding.btnMyClaims.setOnClickListener {
+            startActivity(Intent(this, DonorDashboardActivity::class.java))
+        }
+
         binding.btnEditProfile.setOnClickListener {
             showEditProfileOptionsDialog()
         }
@@ -172,7 +180,8 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         binding.btnRecipes.setOnClickListener {
-            Toast.makeText(this, "Recipes - Coming Soon!", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, RecipeActivity::class.java))
+            finish()
         }
 
         binding.btnCart.setOnClickListener {

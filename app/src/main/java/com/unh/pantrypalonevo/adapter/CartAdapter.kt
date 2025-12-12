@@ -32,14 +32,28 @@ class CartAdapter(
             tvItemName.text = item.name
             tvQuantity.text = item.quantity.toString()
 
-            Glide.with(ivItemImage.context)
-                .load(item.imageUrl)
-                .into(ivItemImage)
+            // Load image if available
+            if (!item.imageUrl.isNullOrBlank()) {
+                try {
+                    Glide.with(ivItemImage.context)
+                        .load(item.imageUrl)
+                        .placeholder(android.R.drawable.ic_menu_gallery)
+                        .error(android.R.drawable.ic_menu_gallery)
+                        .into(ivItemImage)
+                } catch (e: Exception) {
+                    android.util.Log.e("CartAdapter", "Error loading image: ${e.message}")
+                    ivItemImage.setImageResource(android.R.drawable.ic_menu_gallery)
+                }
+            } else {
+                ivItemImage.setImageResource(android.R.drawable.ic_menu_gallery)
+            }
 
             btnIncrease.setOnClickListener {
-                item.quantity++
-                tvQuantity.text = item.quantity.toString()
-                onQuantityChanged(item, item.quantity)
+                if (item.quantity < 99) {
+                    item.quantity++
+                    tvQuantity.text = item.quantity.toString()
+                    onQuantityChanged(item, item.quantity)
+                }
             }
 
             btnDecrease.setOnClickListener {

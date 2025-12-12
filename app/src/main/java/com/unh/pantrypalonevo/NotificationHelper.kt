@@ -40,6 +40,35 @@ object NotificationHelper {
     }
 
     /**
+     * Send notification to a specific user via FCM token
+     * This uses Firebase Cloud Messaging REST API
+     */
+    suspend fun sendNotification(token: String, title: String, body: String) {
+        try {
+            // For now, we'll use a simple approach - save notification to Firestore
+            // The actual FCM sending should be done via Cloud Functions
+            // But we can trigger it by creating a notification document
+            val notificationData = hashMapOf(
+                "token" to token,
+                "title" to title,
+                "body" to body,
+                "timestamp" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
+                "read" to false
+            )
+            
+            db.collection("notifications").add(notificationData)
+                .addOnSuccessListener {
+                    Log.d(TAG, "Notification queued for sending")
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "Error queuing notification", e)
+                }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error sending notification", e)
+        }
+    }
+    
+    /**
      * Send notification to all users when a new pantry is posted
      * This should be called from a Cloud Function or backend
      * For now, we'll create a helper that can be used from Cloud Functions

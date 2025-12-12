@@ -11,6 +11,8 @@ data class PantryProduct(
     val imageUrl: String? = null,
     val category: String = "",
     var selected: Boolean = false,
-    val quantity: Int = 1
+    val quantity: Int = 1,
+    val pantryId: String? = null,
+    val donorId: String? = null
 ) : Parcelable
 

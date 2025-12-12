@@ -79,6 +79,15 @@
             android:paddingTop="16dp"
             android:paddingBottom="16dp">
 
+            <!-- Progress Bar -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:layout_marginTop="16dp" />
+
             <!-- Cart Items RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvCartItems"
@@ -168,7 +177,7 @@
             android:id="@+id/btnCheckout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Proceed to Checkout"
+            android:text="PROCEED TO CHECKOUT"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"

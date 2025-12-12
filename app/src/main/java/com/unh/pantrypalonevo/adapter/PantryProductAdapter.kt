@@ -17,6 +17,7 @@ class PantryProductAdapter(
         RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
+        android.util.Log.d("PantryProductAdapter", "onCreateViewHolder called")
         val binding = ItemPantryProductBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
@@ -27,16 +28,23 @@ class PantryProductAdapter(
 
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
         val product = products[position]
+        android.util.Log.d("PantryProductAdapter", "Binding product at position $position: ${product.name}")
         with(holder.binding) {
             tvProductName.text = product.name
-            tvProductDescription.text = product.description.ifBlank { "No description" }
+            tvProductDescription.text = product.description.ifBlank { "Quantity: ${product.quantity}" }
             
             // Load image if available
             if (!product.imageUrl.isNullOrBlank()) {
-                Glide.with(root.context)
-                    .load(product.imageUrl)
-                    .placeholder(R.drawable.ic_image_not_supported)
-                    .into(ivProductImage)
+                try {
+                    Glide.with(root.context)
+                        .load(product.imageUrl)
+                        .placeholder(R.drawable.ic_image_not_supported)
+                        .error(R.drawable.ic_image_not_supported)
+                        .into(ivProductImage)
+                } catch (e: Exception) {
+                    android.util.Log.e("PantryProductAdapter", "Error loading image: ${e.message}")
+                    ivProductImage.setImageResource(R.drawable.ic_image_not_supported)
+                }
             } else {
                 ivProductImage.setImageResource(R.drawable.ic_image_not_supported)
             }
@@ -57,6 +65,10 @@ class PantryProductAdapter(
         }
     }
 
-    override fun getItemCount(): Int = products.size
+    override fun getItemCount(): Int {
+        val count = products.size
+        android.util.Log.d("PantryProductAdapter", "getItemCount() = $count")
+        return count
+    }
 }
 

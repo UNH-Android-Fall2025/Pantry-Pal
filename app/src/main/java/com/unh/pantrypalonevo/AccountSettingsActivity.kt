@@ -52,11 +52,13 @@ class AccountSettingsActivity : AppCompatActivity() {
         }
 
         binding.btnRecipes.setOnClickListener {
-            Toast.makeText(this, "Recipes - Coming Soon!", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, RecipeActivity::class.java))
+            finish()
         }
 
         binding.btnCart.setOnClickListener {
-            Toast.makeText(this, "Cart - Coming Soon!", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, CartActivity::class.java))
+            finish()
         }
 
         binding.btnProfile.setOnClickListener {

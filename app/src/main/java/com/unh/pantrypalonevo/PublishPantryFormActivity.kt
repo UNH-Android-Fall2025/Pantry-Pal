@@ -120,6 +120,12 @@ class PublishPantryFormActivity : AppCompatActivity() {
                 binding.etEndDate.error = getString(R.string.error_required)
                 return@setOnClickListener
             }
+            
+            // Check if items were added
+            if (pantryItems.isEmpty()) {
+                Toast.makeText(this, "Please add at least one item to your pantry before publishing.", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
 
             publishPantry(name, address, startDate, endDate)
         }

@@ -58,6 +58,8 @@
         <activity android:name=".AccountSettingsActivity" />
         <activity android:name=".SplashActivity" />
         <activity android:name=".CartActivity" />
+        <activity android:name=".OrderHistoryActivity" />
+        <activity android:name=".DonorDashboardActivity" />
 
         <!-- ✅ NEW: Recipe Activity -->
         <activity

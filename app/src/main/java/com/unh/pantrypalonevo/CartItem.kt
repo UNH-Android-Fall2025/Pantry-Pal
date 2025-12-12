@@ -9,6 +9,10 @@ data class CartItem(
     val name: String,
     val category: String,
     var quantity: Int = 1,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+    val pantryId: String? = null,
+    val pantryName: String? = null,
+    val donorId: String? = null,
+    val itemId: String? = null // Firestore item ID
 ) : Parcelable
 

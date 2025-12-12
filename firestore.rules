@@ -33,6 +33,24 @@ service cloud.firestore {
       
       // Users can delete their own document
       allow delete: if isOwner(userId);
+      
+      // Orders subcollection - users can read/write their own orders
+      match /orders/{orderId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Claims subcollection - donors can read/write their own claims
+      // Recipients can create claims (when checking out), donors can read/update
+      match /claims/{claimId} {
+        // Donors can read their own claims
+        allow read: if isOwner(userId);
+        // Anyone authenticated can create claims (recipients creating orders)
+        allow create: if isAuthenticated();
+        // Donors can update their own claims (to change status)
+        allow update: if isOwner(userId);
+        // Donors can delete their own claims
+        allow delete: if isOwner(userId);
+      }
     }
     
     // Pantries collection
@@ -80,7 +98,16 @@ service cloud.firestore {
         }
       }
       
-      // Reservations subcollection
+      // Claims subcollection (orders for this pantry) - NEW
+      match /claims/{claimId} {
+        // Anyone authenticated can read claims
+        allow read: if isAuthenticated();
+        // Recipients can create claims, donors can update
+        allow create: if isAuthenticated();
+        allow update: if isAuthenticated();
+      }
+      
+      // Reservations subcollection - KEPT FROM OLD RULES
       match /reservations/{reservationId} {
         // Users can read their own reservations
         allow read: if isAuthenticated() 
@@ -100,7 +127,28 @@ service cloud.firestore {
       }
     }
     
-    // Recipes collection (if exists)
+    // Orders collection (main orders storage) - NEW
+    match /orders/{orderId} {
+      // Users can read orders they're involved in (as recipient or donor)
+      allow read: if isAuthenticated() && (
+        resource.data.recipientId == request.auth.uid ||
+        resource.data.donorId == request.auth.uid
+      );
+      // Anyone authenticated can create orders
+      allow create: if isAuthenticated();
+      // Donors and recipients can update their orders
+      allow update: if isAuthenticated() && (
+        resource.data.donorId == request.auth.uid ||
+        resource.data.recipientId == request.auth.uid
+      );
+    }
+    
+    // Notifications collection - NEW
+    match /notifications/{notificationId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Recipes collection (if exists) - KEPT FROM OLD RULES
     match /recipes/{recipeId} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
@@ -112,4 +160,3 @@ service cloud.firestore {
     }
   }
 }
-

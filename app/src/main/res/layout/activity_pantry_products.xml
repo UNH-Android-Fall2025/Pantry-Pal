@@ -17,7 +17,19 @@
         app:navigationIconTint="@android:color/white"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+        
+        <ImageButton
+            android:id="@+id/btnRefresh"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_rotate"
+            android:tint="@android:color/white"
+            android:contentDescription="Refresh products" />
+            
+    </androidx.appcompat.widget.Toolbar>
 
     <!-- Pantry Info Card -->
     <androidx.cardview.widget.CardView
@@ -93,7 +105,7 @@
         android:clipToPadding="false"
         android:paddingBottom="100dp"
         app:layout_constraintTop_toBottomOf="@id/tvProductsHeader"
-        app:layout_constraintBottom_toTopOf="@id/btnDirections"
+        app:layout_constraintBottom_toTopOf="@id/buttonContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -104,7 +116,7 @@
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/tvProductsHeader"
-        app:layout_constraintBottom_toTopOf="@id/btnDirections"
+        app:layout_constraintBottom_toTopOf="@id/buttonContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -118,7 +130,7 @@
         android:textColor="#757575"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/tvProductsHeader"
-        app:layout_constraintBottom_toTopOf="@id/btnDirections"
+        app:layout_constraintBottom_toTopOf="@id/buttonContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
